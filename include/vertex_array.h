@@ -6,19 +6,26 @@ namespace hpcgeo {
 
 class VertexArray {
  public:
+  VertexArray();
+  ~VertexArray();
   double* x();
   double* y();
   double* z();
   void** ptrs();
 
   int size() const;
-  void reserve(int size);
   void resize(int size);
+
+  static constexpr unsigned int ALIGNMENT = 128;
 
  private:
   int capacity_;
   int size_;
   void* data_;
+  double* x_;
+  double* y_;
+  double* z_;
+  void** ptrs_;
 };
 
 } // namespace hpcgeo
