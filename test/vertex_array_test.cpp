@@ -15,3 +15,13 @@ TEST(VertexArray, PointersAreInitiallyAligned) {
   EXPECT_EQ(0, reinterpret_cast<uint64_t>(va.z()) % VertexArray::ALIGNMENT);
   EXPECT_EQ(0, reinterpret_cast<uint64_t>(va.ptrs()) % VertexArray::ALIGNMENT);
 }
+
+TEST(VertexArray, PointersAreAlignedAfterResize) {
+  VertexArray va;
+  va.resize(200);
+  EXPECT_EQ(0, reinterpret_cast<uint64_t>(va.x()) % VertexArray::ALIGNMENT);
+  EXPECT_EQ(0, reinterpret_cast<uint64_t>(va.y()) % VertexArray::ALIGNMENT);
+  EXPECT_EQ(0, reinterpret_cast<uint64_t>(va.z()) % VertexArray::ALIGNMENT);
+  EXPECT_EQ(0, reinterpret_cast<uint64_t>(va.ptrs()) % VertexArray::ALIGNMENT);
+}
+
