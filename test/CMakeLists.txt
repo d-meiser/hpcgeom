@@ -1,4 +1,10 @@
 add_subdirectory(gtest)
-add_executable(gtest_test gtest_test.cpp)
-target_link_libraries(gtest_test gtest_main)
-add_test(gtest_test gtest_test)
+
+set(TESTS
+	vertex_array
+	)
+foreach(t ${TESTS})
+	add_executable(${t}_test ${t}_test.cpp)
+	target_link_libraries(${t}_test gtest_main)
+	add_test(${t} ${t}_test)
+endforeach()
