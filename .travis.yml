@@ -1,0 +1,25 @@
+sudo: false
+language: cpp
+compiler:
+  - gcc
+  - clang
+addons:
+  apt:
+    packages:
+    - lcov
+before_install:
+  - gem install coveralls-lcov
+script:
+  - mkdir -p build
+  - cd build
+  - cmake ..
+  - make -j2
+  - ctest --output-on-failure
+  - cd ../build
+after_success:
+  - lcov -d test -d src -base-directory .. -c -o coverage.info
+  - lcov --remove coverage.info '/usr/*' -o coverage.info
+  - lcov --remove coverage.info 'gtest*' -o coverage.info
+  - lcov --remove coverage.info 'test/*' -o coverage.info
+  - cd ..
+  - coveralls-lcov build/coverage.info
