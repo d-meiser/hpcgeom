@@ -2,12 +2,15 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
+#include <cassert>
 
 
 static_assert(sizeof(double) == 8, "Size of double must be 8.");
 static_assert(sizeof(void*) == 8, "Size of void* must be 8.");
-static_assert(hpcgeo::VertexArray::ALIGNMENT % sizeof(double) == 0,
-              "VertexArray::ALIGNMENT must be a multiple of sizeof(double)");
+#define CHUNK_SIZE 8
+static_assert(
+    hpcgeo::VertexArray::ALIGNMENT % (CHUNK_SIZE * sizeof(double)) == 0,
+    "VertexArray::ALIGNMENT must be a multiple of CHUNK_SIZE * sizeof(double)");
 
 
 namespace hpcgeo {
@@ -40,7 +43,24 @@ void set_ptrs(void* d, int capacity, int alignment,
   *ptrs = make_aligned(*ptrs, alignment);
 }
 
+template<typename T>
+void aligned_chunked_copy(T* dest, const T* src, int n) {
+  static_assert(sizeof(T) == 8,
+                "aligned_chunked_copy assumes type of size 8 bytes.");
+  assert(n / CHUNK_SIZE == 0);
+  int num_chunks = n / CHUNK_SIZE;
+  T*__restrict__ x =
+      (T*)__builtin_assume_aligned(dest, VertexArray::ALIGNMENT);
+  const T*__restrict__ y =
+      (const T*)__builtin_assume_aligned(src, VertexArray::ALIGNMENT);
+  for (int i = 0; i < num_chunks; ++i) {
+    for (int j = 0; j < CHUNK_SIZE; ++j) {
+      x[i * CHUNK_SIZE + j] = y[i * CHUNK_SIZE + j];
+    }
+  }
 }
+
+} // anonymous namespace
 
 VertexArray::VertexArray() : size_(0) {
   capacity_ = 16;
@@ -83,10 +103,11 @@ void VertexArray::resize(int size) {
     void** new_ptrs;
     set_ptrs(new_data, new_capacity, ALIGNMENT,
              &new_x, &new_y, &new_z, &new_ptrs);
-    memcpy(new_x, x_, size_ * sizeof(*x_));
-    memcpy(new_y, y_, size_ * sizeof(*y_));
-    memcpy(new_z, z_, size_ * sizeof(*z_));
-    memcpy(new_ptrs, ptrs_, size_ * sizeof(*ptrs_));
+    asm("# Copying old arrays to new arrays");
+    aligned_chunked_copy(new_x, x_, size_);
+    aligned_chunked_copy(new_y, y_, size_);
+    aligned_chunked_copy(new_z, z_, size_);
+    aligned_chunked_copy(new_ptrs, ptrs_, size_);
     free(data_);
     data_ = new_data;
     x_ = new_x;
