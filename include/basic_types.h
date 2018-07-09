@@ -8,12 +8,12 @@ struct Point {
   double x;
   double y;
   double z;
-}
+};
 
 struct BoundingBox {
   Point min;
   Point max;
-}
+};
 
 struct Vertex {
   Point p;
