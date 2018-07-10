@@ -18,7 +18,7 @@ namespace hpcgeo {
 namespace {
 
 int required_storage(int capacity, int alignment) {
-  return (capacity / alignment + 1) * alignment * 4;
+  return (capacity * sizeof(double) / alignment + 1) * alignment * 4;
 }
 
 template<typename T>
@@ -37,7 +37,7 @@ void set_ptrs(void* d, int capacity, int alignment,
   *x = make_aligned(*x, alignment);
   *y = *x + capacity;
   *y = make_aligned(*y, alignment);
-  *z = *z + capacity;
+  *z = *y + capacity;
   *z = make_aligned(*z, alignment);
   *ptrs = reinterpret_cast<void**>(*z) + capacity;
   *ptrs = make_aligned(*ptrs, alignment);
@@ -47,7 +47,7 @@ template<typename T>
 void aligned_chunked_copy(T* dest, const T* src, int n) {
   static_assert(sizeof(T) == 8,
                 "aligned_chunked_copy assumes type of size 8 bytes.");
-  assert(n / CHUNK_SIZE == 0);
+  assert(n % CHUNK_SIZE == 0);
   int num_chunks = n / CHUNK_SIZE;
   T*__restrict__ x =
       (T*)__builtin_assume_aligned(dest, VertexArray::ALIGNMENT);
@@ -66,6 +66,15 @@ VertexArray::VertexArray() : size_(0) {
   capacity_ = 16;
   data_ = malloc(required_storage(capacity_, ALIGNMENT));
   set_ptrs(data_, capacity_, ALIGNMENT, &x_, &y_, &z_, &ptrs_);
+}
+
+VertexArray::VertexArray(const VertexArray& other) : size_(0), capacity_(0),
+    data_(nullptr), x_(nullptr), y_(nullptr), z_(nullptr), ptrs_(nullptr) {
+  resize(other.size_);
+  aligned_chunked_copy(x_, other.x_, capacity_);
+  aligned_chunked_copy(y_, other.y_, capacity_);
+  aligned_chunked_copy(z_, other.z_, capacity_);
+  aligned_chunked_copy(ptrs_, other.ptrs_, capacity_);
 }
 
 VertexArray::~VertexArray() {
@@ -104,10 +113,10 @@ void VertexArray::resize(int size) {
     set_ptrs(new_data, new_capacity, ALIGNMENT,
              &new_x, &new_y, &new_z, &new_ptrs);
     asm("# Copying old arrays to new arrays");
-    aligned_chunked_copy(new_x, x_, size_);
-    aligned_chunked_copy(new_y, y_, size_);
-    aligned_chunked_copy(new_z, z_, size_);
-    aligned_chunked_copy(new_ptrs, ptrs_, size_);
+    aligned_chunked_copy(new_x, x_, capacity_);
+    aligned_chunked_copy(new_y, y_, capacity_);
+    aligned_chunked_copy(new_z, z_, capacity_);
+    aligned_chunked_copy(new_ptrs, ptrs_, capacity_);
     free(data_);
     data_ = new_data;
     x_ = new_x;
