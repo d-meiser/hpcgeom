@@ -23,8 +23,8 @@ class VertexArray {
   static constexpr unsigned int ALIGNMENT = 128;
 
  private:
-  int capacity_;
   int size_;
+  int capacity_;
   void* data_;
   double* x_;
   double* y_;
