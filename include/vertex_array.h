@@ -8,9 +8,9 @@ class VertexArray {
  public:
   VertexArray();
   VertexArray(const VertexArray& other);
-  VertexArray(const VertexArray&& other);
+  VertexArray(VertexArray&& other);
   VertexArray& operator=(const VertexArray& rhs);
-  VertexArray& operator=(const VertexArray&& rhs);
+  VertexArray& operator=(VertexArray&& rhs);
   ~VertexArray();
   double* x();
   double* y();

@@ -77,6 +77,55 @@ VertexArray::VertexArray(const VertexArray& other) : size_(0), capacity_(0),
   aligned_chunked_copy(ptrs_, other.ptrs_, capacity_);
 }
 
+VertexArray::VertexArray(VertexArray&& other) :
+    size_(other.size_), capacity_(other.capacity_),
+    data_(other.data_), x_(other.x_), y_(other.y_),
+    z_(other.z_), ptrs_(other.ptrs_) {
+  other.size_ = 0;
+  other.capacity_ = 0;
+  other.data_ = nullptr;
+  other.x_ = nullptr;
+  other.y_ = nullptr;
+  other.z_ = nullptr;
+  other.ptrs_ = nullptr;
+}
+
+VertexArray& VertexArray::operator=(const VertexArray& rhs) {
+  if (this != &rhs) {
+    free(data_);
+    data_ = nullptr;
+    size_ = 0;
+    capacity_ = 0;
+    resize(rhs.size_);
+    aligned_chunked_copy(x_, rhs.x_, capacity_);
+    aligned_chunked_copy(y_, rhs.y_, capacity_);
+    aligned_chunked_copy(z_, rhs.z_, capacity_);
+    aligned_chunked_copy(ptrs_, rhs.ptrs_, capacity_);
+  }
+  return *this;
+}
+
+VertexArray& VertexArray::operator=(VertexArray&& rhs) {
+  if (this != &rhs) {
+    size_ = rhs.size_;
+    capacity_ = rhs.capacity_;
+    free(data_);
+    data_ = rhs.data_;
+    x_ = rhs.x_;
+    y_ = rhs.y_;
+    z_ = rhs.z_;
+    ptrs_ = rhs.ptrs_;
+    rhs.size_ = 0;
+    rhs.capacity_ = 0;
+    rhs.data_ = nullptr;
+    rhs.x_ = nullptr;
+    rhs.y_ = nullptr;
+    rhs.z_ = nullptr;
+    rhs.ptrs_ = nullptr;
+  }
+  return *this;
+}
+
 VertexArray::~VertexArray() {
   free(data_);
 }

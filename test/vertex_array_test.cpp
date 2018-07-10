@@ -73,4 +73,12 @@ TEST(VertexArray, CanCopy) {
   EXPECT_EQ(orig_x, va.x()[0]);
 }
 
+TEST(VertexArray, CanMove) {
+  VertexArray va;
+  va.resize(10);
+  fill_random(&va);
+  VertexArray va2(std::move(va));
+  EXPECT_EQ(10, va2.size());
+}
+
 }
