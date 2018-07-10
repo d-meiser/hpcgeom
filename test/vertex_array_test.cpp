@@ -9,6 +9,8 @@ using namespace hpcgeo;
 
 namespace {
 
+static const double eps = 1.0e-15;
+
 static std::random_device rd;
 static std::mt19937 mte(rd());
 
@@ -56,6 +58,19 @@ TEST(VertexArray, CanCopy) {
   va.resize(10);
   fill_random(&va);
   VertexArray va2(va);
+  EXPECT_NEAR(va.x()[0], va2.x()[0], eps);
+  EXPECT_NEAR(va.x()[1], va2.x()[1], eps);
+  EXPECT_NEAR(va.y()[0], va2.y()[0], eps);
+  EXPECT_NEAR(va.y()[1], va2.y()[1], eps);
+  EXPECT_NEAR(va.z()[0], va2.z()[0], eps);
+  EXPECT_NEAR(va.z()[1], va2.z()[1], eps);
+  EXPECT_EQ(va.ptrs()[0], va2.ptrs()[0]);
+  EXPECT_EQ(va.ptrs()[1], va2.ptrs()[1]);
+
+  double orig_x = va.x()[0];
+  va2.x()[0] += 1.0;
+  EXPECT_NE(orig_x, va2.x()[0]);
+  EXPECT_EQ(orig_x, va.x()[0]);
 }
 
 }
