@@ -4,7 +4,6 @@
 #include <algorithm>
 
 
-
 namespace {
 
 static const double eps = 1.0e-15;
