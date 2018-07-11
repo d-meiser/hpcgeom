@@ -15,7 +15,6 @@ script:
   - cmake ..
   - make -j2
   - ctest --output-on-failure
-  - cd ../build
 after_success:
   - lcov -d test -d src -base-directory .. -c -o coverage.info
   - lcov --remove coverage.info '/usr/*' -o coverage.info
