@@ -2,25 +2,21 @@
 #define BASIC_TYPES_H
 
 
-namespace hpcgeo {
-
-struct Point {
+struct GeoPoint {
   double x;
   double y;
   double z;
 };
 
-struct BoundingBox {
-  Point min;
-  Point max;
+struct GeoBoundingBox {
+  struct GeoPoint min;
+  struct GeoPoint max;
 };
 
-struct Vertex {
-  Point p;
+struct GeoVertex {
+  struct GeoPoint p;
   void* ptr;
 };
-
-} // namespace hpcgeo
 
 #endif
 
