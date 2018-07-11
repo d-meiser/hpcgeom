@@ -1,0 +1,2 @@
+/* Whether the compiler has support for gcc's function multi-dispatch */
+#cmakedefine GEO_HAVE_FUNCTION_MULTI_DISPATH
