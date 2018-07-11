@@ -1,5 +1,5 @@
 set wildignore+=*.ko,*.mod.c,*.order,modules.builtin
-set list listchars=tab:»·,trail:·
+set listchars=tab:»·,trail:·
 set nu
 set colorcolumn=80
 highlight ColorColumn ctermbg=darkgray
