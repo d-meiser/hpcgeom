@@ -108,7 +108,8 @@ void GeoVAResize(struct GeoVertexArray* va, int size)
 
 struct GeoVertexArray GeoVACopy(const struct GeoVertexArray* va)
 {
-	struct GeoVertexArray copy = {0};
+	struct GeoVertexArray copy;
+	memset(&copy, 0, sizeof(copy));;
 	GeoVAResize(&copy, va->size);
 	aligned_chunked_copy((uint64_t*)copy.x,
 			(uint64_t*)va->x, copy.capacity);
