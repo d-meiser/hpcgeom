@@ -46,7 +46,27 @@ static void set_ptrs(void* d, int capacity, int alignment,
 #ifdef GEO_HAVE_FUNCTION_MULTI_DISPATH
 __attribute__((target_clones("avx2","avx","sse4.2","default")))
 #endif
-static void aligned_chunked_copy(uint64_t* dest, const uint64_t* src, int n)
+static void aligned_chunked_copy_double(double* dest, const double* src, int n)
+{
+	assert(n % ALIGNED_CHUNKED_COPY_CHUNK_SIZE == 0);
+	int num_chunks = n / ALIGNED_CHUNKED_COPY_CHUNK_SIZE;
+	double* restrict x =
+		__builtin_assume_aligned(dest, GEO_VA_ALIGNMENT);
+	const double* restrict y =
+		__builtin_assume_aligned(src, GEO_VA_ALIGNMENT);
+	for (int i = 0; i < num_chunks; ++i) {
+		for (int j = 0; j < ALIGNED_CHUNKED_COPY_CHUNK_SIZE; ++j) {
+			x[i * ALIGNED_CHUNKED_COPY_CHUNK_SIZE + j] =
+				y[i * ALIGNED_CHUNKED_COPY_CHUNK_SIZE + j];
+		}
+	}
+}
+
+#ifdef GEO_HAVE_FUNCTION_MULTI_DISPATH
+__attribute__((target_clones("avx2","avx","sse4.2","default")))
+#endif
+static void aligned_chunked_copy_uint64_t(uint64_t* dest, const uint64_t* src,
+					  int n)
 {
 	assert(n % ALIGNED_CHUNKED_COPY_CHUNK_SIZE == 0);
 	int num_chunks = n / ALIGNED_CHUNKED_COPY_CHUNK_SIZE;
@@ -91,14 +111,12 @@ void GeoVAResize(struct GeoVertexArray* va, int size)
 		set_ptrs(new_data, new_capacity, GEO_VA_ALIGNMENT,
 				&new_x, &new_y, &new_z, &new_ptrs);
 		asm("# Copying old arrays to new arrays");
-		aligned_chunked_copy((uint64_t*)new_x, (const uint64_t*)va->x,
-				va->capacity);
-		aligned_chunked_copy((uint64_t*)new_y, (const uint64_t*)va->y,
-				va->capacity);
-		aligned_chunked_copy((uint64_t*)new_z, (const uint64_t*)va->z,
-				va->capacity);
-		aligned_chunked_copy((uint64_t*)new_ptrs,
-				(const uint64_t*)va->ptrs, va->capacity);
+		aligned_chunked_copy_double(new_x, va->x, va->capacity);
+		aligned_chunked_copy_double(new_y, va->y, va->capacity);
+		aligned_chunked_copy_double(new_z, va->z, va->capacity);
+		aligned_chunked_copy_uint64_t((uint64_t*)new_ptrs,
+					      (const uint64_t*)va->ptrs,
+					      va->capacity);
 		free(va->data);
 		va->data = new_data;
 		va->x = new_x;
@@ -115,13 +133,10 @@ struct GeoVertexArray GeoVACopy(const struct GeoVertexArray* va)
 	struct GeoVertexArray copy;
 	memset(&copy, 0, sizeof(copy));;
 	GeoVAResize(&copy, va->size);
-	aligned_chunked_copy((uint64_t*)copy.x,
-			(uint64_t*)va->x, copy.capacity);
-	aligned_chunked_copy((uint64_t*)copy.y,
-			(uint64_t*)va->y, copy.capacity);
-	aligned_chunked_copy((uint64_t*)copy.z,
-			(uint64_t*)va->z, copy.capacity);
-	aligned_chunked_copy((uint64_t*)copy.ptrs,
-			(uint64_t*)va->ptrs, copy.capacity);
+	aligned_chunked_copy_double(copy.x, va->x, copy.capacity);
+	aligned_chunked_copy_double(copy.y, va->y, copy.capacity);
+	aligned_chunked_copy_double(copy.z, va->z, copy.capacity);
+	aligned_chunked_copy_uint64_t((uint64_t*)copy.ptrs,
+				      (const uint64_t*)va->ptrs, copy.capacity);
 	return copy;
 }
