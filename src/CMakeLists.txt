@@ -1,4 +1,7 @@
-add_library(hpcgeo vertex_array.c)
+add_library(hpcgeo
+	vertex_array.c
+	spatial_hash.c
+	)
 target_include_directories(hpcgeo
 	PUBLIC
 	${PROJECT_SOURCE_DIR}/include
