@@ -4,7 +4,7 @@ set nu
 set colorcolumn=80
 highlight ColorColumn ctermbg=darkgray
 
-autocmd BufRead,BufNewFile *.h,*.c set filetype=c
+autocmd BufRead,BufNewFile *.h,*.c set filetype=c.doxygen
 
 augroup linuxsty
     autocmd FileType c call s:LinuxCodingStyle()

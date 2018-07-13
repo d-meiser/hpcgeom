@@ -1,9 +1,10 @@
 add_subdirectory(gtest)
 
 set(TESTS
+	hashed_octree
+	spatial_hash
 	vertex_array
 	vertex_set
-	spatial_hash
 	)
 foreach(t ${TESTS})
 	add_executable(${t}_test ${t}_test.cpp)
