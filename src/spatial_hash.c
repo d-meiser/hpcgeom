@@ -1,6 +1,7 @@
 #include <spatial_hash.h>
 #include <math.h>
 #include <assert.h>
+#include <stdio.h>
 
 
 // We use 32 bit keys. That is large enough for 2**10 buckets
@@ -9,7 +10,8 @@
 #define NUM_LEAF_BUCKETS (1u << BITS_PER_DIM)
 
 static GeoSpatialHash ComputeBucket(double min, double max,
-				    double pos, GeoSpatialHash num_buckets) {
+	double pos, GeoSpatialHash num_buckets)
+{
 	assert(max > min);
 	double folded_pos = fmod(pos - min, max - min);
 	if (folded_pos < 0) {
@@ -47,4 +49,73 @@ GeoSpatialHash GeoComputeHash(const struct GeoBoundingBox* bbox,
 	return MortonEncode_32(a, b, c);
 }
 
+
+GeoNodeKey GeoNodeRoot()
+{
+	return 1u;
+}
+
+void GeoNodeComputeChildKeys(GeoNodeKey key, GeoNodeKey* child_keys)
+{
+	GeoNodeKey first_child = key << 3;
+	for (int i = 0; i < 8; ++i) {
+		child_keys[i] = first_child + i;
+	}
+}
+
+int GeoNodeValidKey(GeoNodeKey key)
+{
+	if (key & (1u << (BITS_PER_DIM * 3 + 1))) return 0;
+	GeoNodeKey m = 1u << (BITS_PER_DIM * 3);
+	while (m > 0) {
+		if (key & m) return 1;
+		for (int i = 0; i < 3; ++i, m >>= 1) {
+			if (key & m) return 0;
+		}
+	}
+	return 0;
+}
+
+int GeoNodeLevel(GeoNodeKey key)
+{
+	int level = BITS_PER_DIM;
+	while (level > 0) {
+		if (key & (1u << (level * 3))) return level;
+		--level;
+	}
+	return level;
+}
+
+GeoNodeKey GeoNodeParent(GeoNodeKey key)
+{
+	return key >> 3;
+}
+
+GeoSpatialHash GeoNodeBegin(GeoNodeKey key)
+{
+	int level = GeoNodeLevel(key);
+	GeoSpatialHash begin = key ^ (1u << (3 * level));
+	begin <<= 3 * (BITS_PER_DIM - level);
+	return begin;
+}
+
+GeoSpatialHash GeoNodeEnd(GeoNodeKey key)
+{
+	int level = GeoNodeLevel(key);
+	GeoSpatialHash end = key ^ (1u << (3 * level));
+	++end;
+	end <<= 3 * (BITS_PER_DIM - level);
+	return end;
+}
+
+void GeoNodePrint(GeoNodeKey key)
+{
+	for (int i = 31; i >= 0; --i) {
+		if (key & (1u << i)) {
+			printf("1");
+		} else {
+			printf("0");
+		}
+	}
+}
 

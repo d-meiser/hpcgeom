@@ -40,6 +40,45 @@ TEST(ComputeHash, CanComputeKeysOutsideOfBBox) {
   EXPECT_GE(GeoComputeHash(&bbox, &p2), 0u);
 }
 
+TEST(GeoNodeKey, ZeroIsNotValidNode) {
+  EXPECT_FALSE(GeoNodeValidKey(0u));
+}
+
+TEST(GeoNodeKey, RootNodeIsValid) {
+  EXPECT_TRUE(GeoNodeValidKey(GeoNodeRoot()));
+}
+
+TEST(GeoNodeKey, RootNodeIsLevelZero) {
+  EXPECT_EQ(0, GeoNodeLevel(GeoNodeRoot()));
+}
+
+TEST(GeoNodeKey, ChildrenOfRootAreAtLevelOne) {
+  GeoNodeKey child_keys[8];
+  GeoNodeComputeChildKeys(GeoNodeRoot(), child_keys);
+  EXPECT_EQ(1, GeoNodeLevel(child_keys[0]));
+}
+
+TEST(GeoNodeKey, ParentIsAtLowerLevel) {
+  GeoNodeKey key = 64u;
+  ASSERT_TRUE(GeoNodeValidKey(key));
+  EXPECT_LT(GeoNodeLevel(GeoNodeParent(key)), GeoNodeLevel(key));
+}
+
+TEST(GeoNodeKey, BeginOfRootIsZero) {
+  EXPECT_EQ(0u, GeoNodeBegin(GeoNodeRoot()));
+}
+
+TEST(GeoNodeKey, EndOfRootIsTwoToTheThirty) {
+  EXPECT_EQ(1u << (3 * 10), GeoNodeEnd(GeoNodeRoot()));
+}
+
+TEST(GeoNodeKey, BeginSpotChecks) {
+  EXPECT_EQ(1u << (3 * 9), GeoNodeBegin(9u));
+  EXPECT_EQ(2u << (3 * 9), GeoNodeBegin(10u));
+  EXPECT_EQ(3u << (3 * 9), GeoNodeBegin(11u));
+  EXPECT_EQ(1u << (3 * 8), GeoNodeBegin(65u));
+  EXPECT_EQ(10u << (3 * 8), GeoNodeBegin(74u));
+}
 
 }
 
