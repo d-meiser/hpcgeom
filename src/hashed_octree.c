@@ -19,33 +19,41 @@ void GeoHODestroy(struct GeoHashedOctree* tree)
 	free(tree->hashes);
 }
 
-struct TaggedHash {
-	uint32_t hash;
-	uint32_t tag;
+static uint64_t BigHash(uint32_t hash, uint32_t tag)
+{
+	// Store the hash in the higher order bits so we sort by that.
+	return ((uint64_t)hash << 32) | (uint64_t)tag;
 };
-union BigHash {
-	uint64_t hash;
-	struct TaggedHash tagged_hash;
-};
+
+static uint32_t GetHash(uint64_t big_hash)
+{
+	return (uint32_t)(0x00000000FFFFFFFFull & (big_hash >> 32));
+}
+
+static uint32_t GetTag(uint64_t big_hash)
+{
+	return (uint32_t)(0x00000000FFFFFFFFull & big_hash);
+}
+
 
 static void ComputeHashes(const struct GeoBoundingBox *b,
 	const struct GeoVertexArray *va,
 	int begin, int end,
-	union BigHash *hashes)
+	uint64_t *hashes)
 {
 	for (int i = 0; i < end - begin; ++i) {
 		struct GeoPoint p = {
 			va->x[begin + i],
 			va->y[begin + i],
 			va->z[begin + i]};
-		hashes[i].tagged_hash.hash = GeoComputeHash(b, &p);
-		hashes[i].tagged_hash.tag = i;
+		GeoSpatialHash hash = GeoComputeHash(b, &p);
+		hashes[i] = BigHash(hash, i);
 	}
 }
 
 static void merge(
 	GeoSpatialHash **hashes_1, struct GeoVertexArray *va_1,
-	const union BigHash *hashes_2,
+	const uint64_t *hashes_2,
 	int begin, int end, const struct GeoVertexArray *va_2)
 {
 	int n1 =  va_1->size;
@@ -60,7 +68,7 @@ static void merge(
 	int j = 0;
 	int k = 0;
 	while (i < n1 && j  < n2) {
-		if ((*hashes_1)[i] < hashes_2[j].tagged_hash.hash) {
+		if ((*hashes_1)[i] < GetHash(hashes_2[j])) {
 			temp_hashes[k] = (*hashes_1)[i];
 			temp_va.x[k] = va_1->x[i];
 			temp_va.y[k] = va_1->y[i];
@@ -68,8 +76,8 @@ static void merge(
 			temp_va.ptrs[k] = va_1->ptrs[i];
 			++i;
 		} else {
-			temp_hashes[k] = hashes_2[j].tagged_hash.hash;
-			int m = begin + hashes_2[j].tagged_hash.tag;
+			temp_hashes[k] = GetHash(hashes_2[j]);
+			int m = begin + GetTag(hashes_2[j]);
 			temp_va.x[k] = va_2->x[m];
 			temp_va.y[k] = va_2->y[m];
 			temp_va.z[k] = va_2->z[m];
@@ -90,8 +98,8 @@ static void merge(
 	}
 
 	while (j < n2) {
-		temp_hashes[k] = hashes_2[j].tagged_hash.hash;
-		int m = begin + hashes_2[j].tagged_hash.tag;
+		temp_hashes[k] = GetHash(hashes_2[j]);
+		int m = begin + GetTag(hashes_2[j]);
 		temp_va.x[k] = va_2->x[m];
 		temp_va.y[k] = va_2->y[m];
 		temp_va.z[k] = va_2->z[m];
@@ -111,7 +119,7 @@ void GeoHOInsert(struct GeoHashedOctree *tree,
 {
 	int num_items = end - begin;
 	if (num_items <= 0) return;
-	union BigHash new_hashes[end - begin];
+	uint64_t new_hashes[end - begin];
 	ComputeHashes(&tree->bbox, va, begin, end, new_hashes);
 	GeoQsort((uint64_t*)new_hashes, num_items);
 	merge(&tree->hashes, &tree->vertices, new_hashes, begin, end, va);
@@ -166,23 +174,21 @@ void find_overlapping_nodes(
 {
 	struct GeoBoundingBox this_box = GeoNodeBox(node, bbox);
 	if (boxes_overlap(p_bbox, &this_box)) {
-		// We recurse until we can't subdivide further or
-		// until p_bbox completely contains the node's bounding box.
-		// In the latter case all children also overlap.
-		if (GeoNodeLevel(node) < GeoNodeMaxDepth() &&
-		    0 != box_contains(p_bbox, &this_box)) {
+		// Terminate if we can't subdivide further or if p_bbox
+		// contains this node. Otherwise recurse.
+		if (GeoNodeLevel(node) == GeoNodeMaxDepth() ||
+		    box_contains(p_bbox, &this_box)) {
+			*node_list = NodeListPush(*node_list, node);
+		} else {
 			GeoNodeKey children[8];
 			GeoNodeComputeChildKeys(node, children);
 			for (int i = 0; i < 8; ++i) {
 				find_overlapping_nodes(children[i],
 					bbox, p_bbox, node_list);
 			}
-		} else {
-			*node_list = NodeListPush(*node_list, node);
 		}
 	}
 }
-
 
 static struct NodeList *find_visit_list(const struct GeoPoint *p, double eps,
 	const struct GeoBoundingBox *bbox)
@@ -190,12 +196,7 @@ static struct NodeList *find_visit_list(const struct GeoPoint *p, double eps,
 	struct GeoBoundingBox p_bbox = {
 		{ p->x - 0.5 * eps, p->y - 0.5 * eps, p->z - 0.5 * eps },
 		{ p->x + 0.5 * eps, p->y + 0.5 * eps, p->z + 0.5 * eps }};
-	// TODO: There is a better starting point that can be found by finding
-	// the smallest node that fully contains the point's bounding box.
-	// This can be found by coarsening the hashes for min and max of
-	// the points bbox until they are identical. This is an optimization
-	// worth exploiting.
-	GeoNodeKey node = GeoNodeRoot();
+	GeoNodeKey node = GeoNodeSmallestContaining(bbox, &p_bbox);
 	struct NodeList *visit_list = 0;
 	find_overlapping_nodes(node, bbox, &p_bbox, &visit_list);
 	return visit_list;
