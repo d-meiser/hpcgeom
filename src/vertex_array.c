@@ -140,3 +140,10 @@ struct GeoVertexArray GeoVACopy(const struct GeoVertexArray* va)
 				      (const uint64_t*)va->ptrs, copy.capacity);
 	return copy;
 }
+
+void GeoVASwap(struct GeoVertexArray *va1, struct GeoVertexArray *va2)
+{
+	struct GeoVertexArray tmp = *va1;
+	*va1 = *va2;
+	*va2 = tmp;
+}

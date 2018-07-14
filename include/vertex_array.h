@@ -22,6 +22,7 @@ void GeoVAInitialize(struct GeoVertexArray* va);
 void GeoVADestroy(struct GeoVertexArray* va);
 void GeoVAResize(struct GeoVertexArray* va, int size);
 struct GeoVertexArray GeoVACopy(const struct GeoVertexArray* va);
+void GeoVASwap(struct GeoVertexArray *va1, struct GeoVertexArray *va2);
 
 #ifdef __cplusplus
 }

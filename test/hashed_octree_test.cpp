@@ -32,6 +32,7 @@ TEST_F(HashedOctree, CanInsertItems) {
   vertex_array.x[1] = 0.3;
   vertex_array.ptrs[1] = 0;
   GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  EXPECT_EQ(2, octree.vertices.size);
 }
 
 }
