@@ -33,11 +33,6 @@ void GeoHODestroy(struct GeoHashedOctree* tree);
 void GeoHOInsert(struct GeoHashedOctree* tree,
 	const struct GeoVertexArray* va, int begin, int end);
 
-/** Uniformly grow bounding box until it fully encloses the new
- *  bounding volume.*/
-void GeoHOGrowBoundingBox(struct GeoHashedOctree *tree,
-	const struct GeoBoundingBox* new_bb);
-
 typedef void GeoVertexVisitor(struct GeoVertexArray* va, int i, void* ctx);
 void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,
 	const struct GeoPoint* p, double eps,
