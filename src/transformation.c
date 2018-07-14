@@ -4,7 +4,7 @@
 #define MY_CHUNK_SIZE 16
 
 #ifdef GEO_HAVE_FUNCTION_MULTI_DISPATH
-__attribute__((target_clones("avx2","avx","sse4.2","default")))
+__attribute__((target_clones("avx","sse4.2","default")))
 #endif
 void apply_transform(double **T,
 	double **x, double**y, int n)
