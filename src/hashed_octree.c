@@ -136,21 +136,22 @@ void GeoHOInsert(struct GeoHashedOctree *tree,
 	merge(&tree->hashes, &tree->vertices, new_hashes, begin, end, va);
 }
 
-struct NodeVector8 {
-	GeoNodeKey nodes[8];
-	int end;
+struct NodeList {
+	struct NodeList* next;
+	GeoNodeKey node;
 };
-
-void NodeVector8Initialize(struct NodeVector8 *nodes)
-{
-	memset(nodes, 0, sizeof(*nodes));
+static void NodeListDelete(struct NodeList *list) {
+	while (list) {
+		struct NodeList *next = list->next;
+		free(list);
+		list = next;
+	}
 }
-
-static void NodeVector8PushBack(struct NodeVector8 *nodes, GeoNodeKey node)
-{
-	assert(nodes->end < 8);
-	nodes->nodes[nodes->end] = node;
-	++nodes->end;
+static struct NodeList *NodeListPush(struct NodeList *list, GeoNodeKey node) {
+	struct NodeList *new_node = malloc(sizeof(*new_node));
+	new_node->next = list;
+	new_node->node = node;
+	return new_node;
 }
 
 static int boxes_overlap(
@@ -180,7 +181,7 @@ static int box_contains(
 void find_overlapping_nodes(
 	GeoNodeKey node, const struct GeoBoundingBox *bbox,
 	const struct GeoBoundingBox *p_bbox,
-	struct NodeVector8 *nodes)
+	struct NodeList **node_list)
 {
 	struct GeoBoundingBox this_box = GeoNodeBox(node, bbox);
 	if (boxes_overlap(p_bbox, &this_box)) {
@@ -188,27 +189,26 @@ void find_overlapping_nodes(
 		// contains this node. Otherwise recurse.
 		if (GeoNodeLevel(node) == GeoNodeMaxDepth() ||
 		    box_contains(p_bbox, &this_box)) {
-			NodeVector8PushBack(nodes, node);
+			*node_list = NodeListPush(*node_list, node);
 		} else {
 			GeoNodeKey children[8];
 			GeoNodeComputeChildKeys(node, children);
 			for (int i = 0; i < 8; ++i) {
 				find_overlapping_nodes(children[i],
-					bbox, p_bbox, nodes);
+					bbox, p_bbox, node_list);
 			}
 		}
 	}
 }
 
-static struct NodeVector8 find_visit_list(const struct GeoPoint *p, double eps,
+static struct NodeList *find_visit_list(const struct GeoPoint *p, double eps,
 	const struct GeoBoundingBox *bbox)
 {
 	struct GeoBoundingBox p_bbox = {
 		{ p->x - 0.5 * eps, p->y - 0.5 * eps, p->z - 0.5 * eps },
 		{ p->x + 0.5 * eps, p->y + 0.5 * eps, p->z + 0.5 * eps }};
 	GeoNodeKey node = GeoNodeSmallestContaining(bbox, &p_bbox);
-	struct NodeVector8 visit_list;
-	NodeVector8Initialize(&visit_list);
+	struct NodeList *visit_list = 0;
 	find_overlapping_nodes(node, bbox, &p_bbox, &visit_list);
 	return visit_list;
 }
@@ -277,11 +277,11 @@ void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,
 	const struct GeoPoint* p, double eps,
 	GeoVertexVisitor visitor, void *ctx)
 {
-	struct NodeVector8 visit_list =
+	struct NodeList *visit_list =
 		find_visit_list(p, eps, &tree->bbox);
-	for (int i = 0; i < visit_list.end; ++i ) {
-		int cont = visit_node(
-			visit_list.nodes[i], tree, p, eps, visitor, ctx);
+	for (struct NodeList *n = visit_list; n != 0; n = n->next) {
+		int cont = visit_node(n->node, tree, p, eps, visitor, ctx);
 		if (0 == cont) return;
 	}
+	NodeListDelete(visit_list);
 }
