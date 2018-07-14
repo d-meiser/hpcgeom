@@ -39,6 +39,20 @@ static uint32_t MortonEncode_32(uint32_t a, uint32_t b, uint32_t c)
 	return Part1By2_32(a) + (Part1By2_32(b) << 1) + (Part1By2_32(c) << 2);
 }
 
+static void MortonDecode_32(uint32_t code, int bits_per_dim,
+	uint32_t *a, uint32_t *b, uint32_t *c)
+{
+	// TODO: Optimize decode using magic bits.
+	*a = 0u;
+	*b = 0u;
+	*c = 0u;
+	for (int i = 0; i < bits_per_dim; ++i) {
+		if ((code >> 0) & (1u << (3 * i))) *a += 1u << i;
+		if ((code >> 1) & (1u << (3 * i))) *b += 1u << i;
+		if ((code >> 2) & (1u << (3 * i))) *c += 1u << i;
+	}
+}
+
 GeoSpatialHash GeoComputeHash(const struct GeoBoundingBox* bbox,
 	const struct GeoPoint* p)
 {
@@ -53,6 +67,31 @@ GeoSpatialHash GeoComputeHash(const struct GeoBoundingBox* bbox,
 GeoNodeKey GeoNodeRoot()
 {
 	return 1u;
+}
+
+int GeoNodeMaxDepth() {
+	return BITS_PER_DIM;
+}
+
+struct GeoBoundingBox GeoNodeBox(GeoNodeKey key,
+	const struct GeoBoundingBox *bbox)
+{
+	uint32_t a, b, c;
+	int level = GeoNodeLevel(key);
+	MortonDecode_32(key, level, &a, &b, &c);
+	double dx = (bbox->max.x - bbox->min.x) / (1u << level);
+	double dy = (bbox->max.y - bbox->min.y) / (1u << level);
+	double dz = (bbox->max.z - bbox->min.z) / (1u << level);
+	struct GeoBoundingBox this_box = {{
+		bbox->min.x + a * dx,
+		bbox->min.y + b * dy,
+		bbox->min.z + c * dz
+		}, {
+		bbox->min.x + (a + 1) * dx,
+		bbox->min.y + (b + 1) * dy,
+		bbox->min.z + (c + 1) * dz
+		}};
+	return this_box;
 }
 
 void GeoNodeComputeChildKeys(GeoNodeKey key, GeoNodeKey* child_keys)
