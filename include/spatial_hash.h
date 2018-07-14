@@ -26,6 +26,8 @@ struct GeoBoundingBox GeoNodeBox(GeoNodeKey key,
 	const struct GeoBoundingBox *bbox);
 struct GeoBoundingBox ComputeChildBox(
 	const struct GeoBoundingBox *bbox, int octant);
+GeoNodeKey GeoNodeSmallestContaining(const struct GeoBoundingBox* root_box,
+	const struct GeoBoundingBox *b);
 
 #ifdef __cplusplus
 }

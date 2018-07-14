@@ -158,3 +158,16 @@ void GeoNodePrint(GeoNodeKey key)
 	}
 }
 
+GeoNodeKey GeoNodeSmallestContaining(const struct GeoBoundingBox* root_box,
+	const struct GeoBoundingBox *b)
+{
+	GeoSpatialHash min = GeoComputeHash(root_box, &b->min);
+	GeoSpatialHash max = GeoComputeHash(root_box, &b->max);
+	int level = GeoNodeMaxDepth();
+	while (min != max) {
+		min >>= 3;
+		max >>= 3;
+		--level;
+	}
+	return min | (1u << (3 * level));
+}
