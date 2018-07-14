@@ -34,6 +34,32 @@ static uint32_t Part1By2_32(uint32_t a)
 	return a;
 }
 
+// Inverse of Part1By2 - "delete" all bits not at positions divisible by 3
+static uint32_t Compact1By2_32(uint32_t x)
+{
+	x &= 0x09249249;                  // x = ---- 9--8 --7- -6-- 5--4 --3- -2-- 1--0
+	x = (x ^ (x >>  2)) & 0x030c30c3; // x = ---- --98 ---- 76-- --54 ---- 32-- --10
+	x = (x ^ (x >>  4)) & 0x0300f00f; // x = ---- --98 ---- ---- 7654 ---- ---- 3210
+	x = (x ^ (x >>  8)) & 0xff0000ff; // x = ---- --98 ---- ---- ---- ---- 7654 3210
+	x = (x ^ (x >> 16)) & 0x000003ff; // x = ---- ---- ---- ---- ---- --98 7654 3210
+	return x;
+}
+
+static uint32_t DecodeMorton3X(uint32_t code)
+{
+	return Compact1By2_32(code >> 0);
+}
+
+static uint32_t DecodeMorton3Y(uint32_t code)
+{
+	return Compact1By2_32(code >> 1);
+}
+
+static uint32_t DecodeMorton3Z(uint32_t code)
+{
+	return Compact1By2_32(code >> 2);
+}
+
 static uint32_t MortonEncode_32(uint32_t a, uint32_t b, uint32_t c)
 {
 	return Part1By2_32(a) + (Part1By2_32(b) << 1) + (Part1By2_32(c) << 2);
@@ -42,15 +68,10 @@ static uint32_t MortonEncode_32(uint32_t a, uint32_t b, uint32_t c)
 static void MortonDecode_32(uint32_t code, int bits_per_dim,
 	uint32_t *a, uint32_t *b, uint32_t *c)
 {
-	// TODO: Optimize decode using magic bits.
-	*a = 0u;
-	*b = 0u;
-	*c = 0u;
-	for (int i = 0; i < bits_per_dim; ++i) {
-		if ((code >> 0) & (1u << (3 * i))) *a += 1u << i;
-		if ((code >> 1) & (1u << (3 * i))) *b += 1u << i;
-		if ((code >> 2) & (1u << (3 * i))) *c += 1u << i;
-	}
+	code &= (1u << (3 * bits_per_dim)) - 1u;
+	*a = DecodeMorton3X(code);
+	*b = DecodeMorton3Y(code);
+	*c = DecodeMorton3Z(code);
 }
 
 GeoSpatialHash GeoComputeHash(const struct GeoBoundingBox* bbox,
