@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <qsort.h>
 #include <math.h>
+#include <assert.h>
 
 
 void GeoHOInitialize(struct GeoHashedOctree* tree, struct GeoBoundingBox b)
@@ -49,6 +50,14 @@ static void ComputeHashes(const struct GeoBoundingBox *b,
 		GeoSpatialHash hash = GeoComputeHash(b, &p);
 		hashes[i] = BigHash(hash, i);
 	}
+}
+
+static int hashes_are_sorted(GeoSpatialHash *h, int n)
+{
+	for (int i = 0; i < n - 1; ++i) {
+		if (h[i] > h[i + 1]) return 0;
+	}
+	return 1;
 }
 
 static void merge(
@@ -112,6 +121,8 @@ static void merge(
 	*hashes_1 = temp_hashes;
 	GeoVASwap(&temp_va, va_1);
 	GeoVADestroy(&temp_va);
+
+	assert(hashes_are_sorted(*hashes_1, va_1->size));
 }
 
 void GeoHOInsert(struct GeoHashedOctree *tree,
