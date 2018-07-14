@@ -219,4 +219,25 @@ TEST_F(HashedOctree, VertexInNeighbouringNodeIsVisitedZ) {
   EXPECT_GT(ctx.visits, 0);
 }
 
+TEST_F(HashedOctree, CanInsertMultipleTimes) {
+  int num_vertices = 100;
+  GeoVAResize(&vertex_array, num_vertices);
+  indices.resize(2 * num_vertices);
+  FillWithRandomItems(&vertex_array, &octree.bbox, num_vertices, &indices[0]);
+  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  // Have to set the pointes to something different so CountVisits
+  // doesn't identify the vertices as the same vertex.
+  for (int i = 0; i < num_vertices; ++i) {
+    vertex_array.ptrs[i] = &indices[num_vertices + i];
+  }
+  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+
+  struct CountVisitsCtx ctx = {&indices[0], 0};
+  struct GeoPoint p = {
+    vertex_array.x[0], vertex_array.y[0], vertex_array.z[0]};
+  GeoHOVisitNearVertices(&octree, &p, eps,
+                         CountVisits, &ctx);
+  EXPECT_GT(ctx.visits, 0);
+}
+
 }
