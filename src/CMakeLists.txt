@@ -1,8 +1,9 @@
 add_library(hpcgeo
 	hashed_octree.c
-	spatial_hash.c
-	vertex_array.c
 	qsort.cpp
+	spatial_hash.c
+	transformation.c
+	vertex_array.c
 	)
 target_include_directories(hpcgeo
 	PUBLIC
