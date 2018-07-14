@@ -38,7 +38,7 @@ void GeoHOInsert(struct GeoHashedOctree* tree,
 void GeoHOGrowBoundingBox(struct GeoHashedOctree *tree,
 	const struct GeoBoundingBox* new_bb);
 
-typedef void GeoVertexVisitor(double x, double y, double z, void* ptr, void* ctx);
+typedef void GeoVertexVisitor(struct GeoVertexArray* va, int i, void* ctx);
 void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,
 	const struct GeoPoint* p, double eps,
 	GeoVertexVisitor visitor, void* ctx);

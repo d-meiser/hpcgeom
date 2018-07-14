@@ -263,10 +263,10 @@ static void visit_node(GeoNodeKey node, struct GeoHashedOctree *tree,
 	GeoSpatialHash end = GeoNodeEnd(node);
 	int l = lower_bound(tree->hashes, tree->vertices.size, begin);
 	int h = upper_bound(tree->hashes, tree->vertices.size, end);
-	const struct GeoVertexArray *va = &tree->vertices;
+	struct GeoVertexArray *va = &tree->vertices;
 	for (int i = l; i != h; ++i) {
 		if (vertex_is_near(i, va, p, eps)) {
-			visitor(va->x[i], va->y[i], va->z[i], va->ptrs[i], ctx);
+			visitor(va, i, ctx);
 		}
 	}
 }

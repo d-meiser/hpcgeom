@@ -97,9 +97,9 @@ struct CountVisitsCtx {
   int visits;
 };
 
-void CountVisits(double x, double y, double z, void* ptr, void* ctx) {
+void CountVisits(struct GeoVertexArray *va, int i, void* ctx) {
   struct CountVisitsCtx *count_visits_ctx = (struct CountVisitsCtx*)ctx;
-  if (ptr != count_visits_ctx->self_ptr) {
+  if (va->ptrs[i] != count_visits_ctx->self_ptr) {
     ++count_visits_ctx->visits;
   }
 }
