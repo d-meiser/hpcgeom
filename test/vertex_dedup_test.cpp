@@ -17,7 +17,6 @@ struct TimingResults {
   double VertexDedup1;
   double BuildTreeFromOrderedItems;
   double VertexDedup2;
-  double ParallelVertexDedup;
 };
 
 Configuration parse_command_line(int argn, char **argv);
@@ -30,7 +29,7 @@ void VertexDedup(struct GeoHashedOctree* tree);
 int main(int argn, char **argv) {
   Configuration conf = parse_command_line(argn, argv);
 
-  TimingResults results = {0, 0, 0, 0, 0};
+  TimingResults results = {0, 0, 0, 0};
 
   std::cout.precision(5);
   std::cout << std::scientific;
@@ -83,7 +82,6 @@ int main(int argn, char **argv) {
   std::cout << "    \"VertexDedup1\":                   " << results.VertexDedup1 << ",\n";
   std::cout << "    \"BuildTreeFromOrderedItems\":      " << results.BuildTreeFromOrderedItems << ",\n";
   std::cout << "    \"VertexDedup2\":                   " << results.VertexDedup2 << "\n";
-  std::cout << "    \"ParallelVertexDedup\":            " << results.ParallelVertexDedup << "\n";
   std::cout << "  },\n";
 
   std::cout << "  \"averages\": {\n";
@@ -91,7 +89,6 @@ int main(int argn, char **argv) {
   std::cout << "    \"VertexDedup1\":                   " << results.VertexDedup1 / conf.num_iter << ",\n";
   std::cout << "    \"BuildTreeFromOrderedItems\":      " << results.BuildTreeFromOrderedItems / conf.num_iter << ",\n";
   std::cout << "    \"VertexDedup2\":                   " << results.VertexDedup2 / conf.num_iter << "\n";
-  std::cout << "    \"ParallelVertexDedup\":            " << results.ParallelVertexDedup / conf.num_iter << "\n";
   std::cout << "  }\n";
   std::cout << "}\n";
 }
@@ -162,15 +159,7 @@ static int find_string(std::string s, int argn, char **argv) {
 static const std::string usage(
     "Usage: vertex_dedup_test "
     "[--num_vertices num_vertices] "
-    "[--num_iter num_iter] "
-    "\n\n"
-    "Available tree_types:\n"
-    "  HashedOctree\n"
-    "  WideTree\n"
-#ifdef HOT_HAVE_TBB
-    "  HashedOctreeParallel\n"
-    "  WideTreeParallel\n"
-#endif
+    "[--num_iter num_iter]"
     );
 
 Configuration parse_command_line(int argn, char **argv) {
