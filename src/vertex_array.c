@@ -41,6 +41,14 @@ static void set_ptrs(void* d, int capacity, int alignment,
 	*z = make_aligned(*z, alignment);
 	*ptrs = (void**)*z + capacity;
 	*ptrs = make_aligned(*ptrs, alignment);
+	assert((uint64_t)*x % GEO_VA_ALIGNMENT == 0);
+	assert((uint64_t)*y % GEO_VA_ALIGNMENT == 0);
+	assert((uint64_t)*z % GEO_VA_ALIGNMENT == 0);
+	assert((uint64_t)*ptrs % GEO_VA_ALIGNMENT == 0);
+	assert((void*)*x >= (void*)d);
+	assert((void*)*y >= (void*)*x);
+	assert((void*)*z >= (void*)*y);
+	assert((void*)*ptrs >= (void*)*z);
 }
 
 #ifdef GEO_HAVE_FUNCTION_MULTI_DISPATH
@@ -126,6 +134,7 @@ void GeoVAResize(struct GeoVertexArray* va, int size)
 		va->capacity = new_capacity;
 	}
 	va->size = size;
+	assert(va->capacity >= va->size);
 }
 
 struct GeoVertexArray GeoVACopy(const struct GeoVertexArray* va)
@@ -138,6 +147,9 @@ struct GeoVertexArray GeoVACopy(const struct GeoVertexArray* va)
 	aligned_chunked_copy_double(copy.z, va->z, copy.capacity);
 	aligned_chunked_copy_uint64_t((uint64_t*)copy.ptrs,
 				      (const uint64_t*)va->ptrs, copy.capacity);
+
+	assert(copy.size == va->size);
+
 	return copy;
 }
 
