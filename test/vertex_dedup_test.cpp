@@ -128,12 +128,14 @@ struct DedupCtx {
 };
 
 extern "C"
-void DedupVisitor(struct GeoVertexArray* va, int i, void* ctx)
+int DedupVisitor(struct GeoVertexArray* va, int i, void* ctx)
 {
   DedupCtx *dedup_ctx = static_cast<DedupCtx*>(ctx);
   if (i < dedup_ctx->self) {
     dedup_ctx->duplicate_indices.push_back(dedup_ctx->self);
+    return 0;
   }
+  return 1;
 }
 
 void VertexDedup(struct GeoHashedOctree *tree) {

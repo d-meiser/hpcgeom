@@ -255,7 +255,7 @@ static int vertex_is_near(int i, const struct GeoVertexArray *va,
 	}
 }
 
-static void visit_node(GeoNodeKey node, struct GeoHashedOctree *tree,
+static int visit_node(GeoNodeKey node, struct GeoHashedOctree *tree,
 	const struct GeoPoint* p, double eps,
 	GeoVertexVisitor visitor, void *ctx)
 {
@@ -266,9 +266,11 @@ static void visit_node(GeoNodeKey node, struct GeoHashedOctree *tree,
 	struct GeoVertexArray *va = &tree->vertices;
 	for (int i = l; i != h; ++i) {
 		if (vertex_is_near(i, va, p, eps)) {
-			visitor(va, i, ctx);
+			int cont = visitor(va, i, ctx);
+			if (0 == cont) return cont;
 		}
 	}
+	return 1;
 }
 
 void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,
@@ -278,6 +280,8 @@ void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,
 	struct NodeVector8 visit_list =
 		find_visit_list(p, eps, &tree->bbox);
 	for (int i = 0; i < visit_list.end; ++i ) {
-		visit_node(visit_list.nodes[i], tree, p, eps, visitor, ctx);
+		int cont = visit_node(
+			visit_list.nodes[i], tree, p, eps, visitor, ctx);
+		if (0 == cont) return;
 	}
 }

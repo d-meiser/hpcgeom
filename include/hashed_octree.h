@@ -33,7 +33,7 @@ void GeoHODestroy(struct GeoHashedOctree* tree);
 void GeoHOInsert(struct GeoHashedOctree* tree,
 	const struct GeoVertexArray* va, int begin, int end);
 
-typedef void GeoVertexVisitor(struct GeoVertexArray* va, int i, void* ctx);
+typedef int GeoVertexVisitor(struct GeoVertexArray* va, int i, void* ctx);
 void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,
 	const struct GeoPoint* p, double eps,
 	GeoVertexVisitor visitor, void* ctx);
