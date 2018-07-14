@@ -14,15 +14,18 @@ GeoSpatialHash GeoComputeHash(const struct GeoBoundingBox* b,
 
 typedef uint32_t GeoNodeKey;
 GeoNodeKey GeoNodeRoot();
-void GeoNodeComputeChildKeys(GeoNodeKey key, GeoNodeKey* child_keys);
+int GeoNodeMaxDepth();
+void GeoNodeComputeChildKeys(GeoNodeKey key, GeoNodeKey *child_keys);
 int GeoNodeValidKey(GeoNodeKey key);
 int GeoNodeLevel(GeoNodeKey key);
 GeoNodeKey GeoNodeParent(GeoNodeKey key);
 GeoSpatialHash GeoNodeBegin(GeoNodeKey key);
 GeoSpatialHash GeoNodeEnd(GeoNodeKey key);
 void GeoNodePrint(GeoNodeKey key);
+struct GeoBoundingBox GeoNodeBox(GeoNodeKey key,
+	const struct GeoBoundingBox *bbox);
 struct GeoBoundingBox ComputeChildBox(
-	const struct GeoBoundingBox* bbox, int octant);
+	const struct GeoBoundingBox *bbox, int octant);
 
 #ifdef __cplusplus
 }
