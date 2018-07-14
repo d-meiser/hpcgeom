@@ -120,4 +120,40 @@ TEST_F(HashedOctree, VertexInNeighbouringNodeIsVisitedX) {
   EXPECT_GT(ctx.visits, 0);
 }
 
+TEST_F(HashedOctree, VertexInNeighbouringNodeIsVisitedY) {
+  indices.resize(100);
+  FillTreeWithRandomItems(&octree, 100, &indices[0]);
+  octree.vertices.x[0] = 0.1;
+  octree.vertices.y[0] = 0.5 - 0.2 * eps;
+  octree.vertices.z[0] = 0.1;
+  octree.vertices.x[1] = 0.1;
+  octree.vertices.y[1] = 0.5 + 0.2 * eps;
+  octree.vertices.z[1] = 0.1;
+
+  struct CountVisitsCtx ctx = {octree.vertices.ptrs[0], 0};
+  struct GeoPoint p = {
+    octree.vertices.x[0], octree.vertices.y[0], octree.vertices.z[0]};
+  GeoHOVisitNearVertices(&octree, &p, eps,
+                         CountVisits, &ctx);
+  EXPECT_GT(ctx.visits, 0);
+}
+
+TEST_F(HashedOctree, VertexInNeighbouringNodeIsVisitedZ) {
+  indices.resize(100);
+  FillTreeWithRandomItems(&octree, 100, &indices[0]);
+  octree.vertices.x[0] = 0.1;
+  octree.vertices.y[0] = 0.1;
+  octree.vertices.z[0] = 0.5 - 0.2 * eps;
+  octree.vertices.x[1] = 0.1;
+  octree.vertices.y[1] = 0.1;
+  octree.vertices.z[1] = 0.5 + 0.2 * eps;
+
+  struct CountVisitsCtx ctx = {octree.vertices.ptrs[0], 0};
+  struct GeoPoint p = {
+    octree.vertices.x[0], octree.vertices.y[0], octree.vertices.z[0]};
+  GeoHOVisitNearVertices(&octree, &p, eps,
+                         CountVisits, &ctx);
+  EXPECT_GT(ctx.visits, 0);
+}
+
 }
