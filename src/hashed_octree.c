@@ -52,6 +52,7 @@ static void ComputeHashes(const struct GeoBoundingBox *b,
 	}
 }
 
+#ifndef NDEBUG
 static int hashes_are_sorted(GeoSpatialHash *h, int n)
 {
 	for (int i = 0; i < n - 1; ++i) {
@@ -59,6 +60,7 @@ static int hashes_are_sorted(GeoSpatialHash *h, int n)
 	}
 	return 1;
 }
+#endif
 
 static void merge(
 	GeoSpatialHash **hashes_1, struct GeoVertexArray *va_1,
