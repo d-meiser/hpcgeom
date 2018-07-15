@@ -168,38 +168,40 @@ static int boxes_overlap(
 	}
 }
 
-static int box_contains(
-	const struct GeoBoundingBox* a, const struct GeoBoundingBox* b)
+static double volume(const struct GeoBoundingBox* bbox)
 {
-	if (a->min.x <= b->min.x && a->max.x >= b->max.x &&
-	    a->min.y <= b->min.y && a->max.y >= b->max.y &&
-	    a->min.z <= b->min.z && a->max.z >= b->max.z) {
-		return 1;
-	} else {
-		return 0;
-	}
+	return
+		(bbox->max.x - bbox->min.x) *
+		(bbox->max.y - bbox->min.y) *
+		(bbox->max.z - bbox->min.z);
 }
 
-void find_overlapping_nodes(
+static void find_overlapping_nodes(
 	GeoNodeKey node, const struct GeoBoundingBox *bbox,
-	const struct GeoBoundingBox *p_bbox,
+	const struct GeoBoundingBox *p_bbox, double eps_cubed,
 	struct NodeList **node_list)
 {
 	if (boxes_overlap(p_bbox, bbox)) {
-		// Terminate if we can't subdivide further or if p_bbox
-		// contains this node. Otherwise recurse.
+		// Keep this node if we have reached the finest level or
+		// if the node is of comparable size to the bounding volume
+		// of the point (eps_cubed). Note that the exact termination
+		// criterion can be tuned. Choosing a tighter criterion leads to
+		// more (but smaller) nodes and rejects more candidate vertices.
+		// Choosing a looser criterion leads to fewer (but larger) nodes
+		// and rejects fewer vertices outright. The correctness of the
+		// algorithm is not affected.
 		if (GeoNodeLevel(node) == GeoNodeMaxDepth() ||
-		    box_contains(p_bbox, bbox)) {
+		    volume(bbox) < 8 * eps_cubed) {
 			*node_list = NodeListPush(*node_list, node);
 		} else {
 			GeoNodeKey children[8];
 			GeoNodeComputeChildKeys(node, children);
 			struct GeoBoundingBox child_boxes[8];
 			GeoComputeChildBoxes(bbox, child_boxes);
-			// TODO: Compute child boxes here
 			for (int i = 0; i < 8; ++i) {
 				find_overlapping_nodes(children[i],
-					&child_boxes[i], p_bbox, node_list);
+					&child_boxes[i], p_bbox, eps_cubed,
+					node_list);
 			}
 		}
 	}
@@ -209,12 +211,13 @@ static struct NodeList *find_visit_list(const struct GeoPoint *p, double eps,
 	const struct GeoBoundingBox *bbox)
 {
 	struct GeoBoundingBox p_bbox = {
-		{ p->x - 0.5 * eps, p->y - 0.5 * eps, p->z - 0.5 * eps },
-		{ p->x + 0.5 * eps, p->y + 0.5 * eps, p->z + 0.5 * eps }};
+		{ p->x - eps, p->y - eps, p->z - eps },
+		{ p->x + eps, p->y + eps, p->z + eps }};
 	GeoNodeKey node = GeoNodeSmallestContaining(bbox, &p_bbox);
 	struct GeoBoundingBox smallest_bbox = GeoNodeBox(node, bbox);
 	struct NodeList *visit_list = 0;
-	find_overlapping_nodes(node, &smallest_bbox, &p_bbox, &visit_list);
+	find_overlapping_nodes(node, &smallest_bbox, &p_bbox, eps * eps * eps,
+		&visit_list);
 	return visit_list;
 }
 
@@ -251,9 +254,9 @@ static uint32_t lower_bound(uint32_t* arr, uint32_t n, uint32_t x)
 static int vertex_is_near(int i, const struct GeoVertexArray *va,
 	const struct GeoPoint *p, double eps)
 {
-	if (fabs(p->x - va->x[i]) <= eps &&
-	    fabs(p->y - va->y[i]) <= eps &&
-	    fabs(p->z - va->z[i]) <= eps) {
+	if ((fabs(p->x - va->x[i]) <= eps) &&
+	    (fabs(p->y - va->y[i]) <= eps) &&
+	    (fabs(p->z - va->z[i]) <= eps)) {
 		return 1;
 	} else {
 		return 0;
@@ -286,7 +289,90 @@ void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,
 		find_visit_list(p, eps, &tree->bbox);
 	for (struct NodeList *n = visit_list; n != 0; n = n->next) {
 		int cont = visit_node(n->node, tree, p, eps, visitor, ctx);
-		if (0 == cont) return;
+		if (0 == cont) {
+			NodeListDelete(visit_list);
+			return;
+		}
 	}
 	NodeListDelete(visit_list);
 }
+
+
+struct DedupCtx {
+	int self;
+	int *vertices_to_delete;
+	int size;
+	int capacity;
+};
+
+static void DedupCtxInitialize(struct DedupCtx *ctx)
+{
+	memset(ctx, 0, sizeof(*ctx));
+	ctx->capacity = 16;
+	ctx->vertices_to_delete = malloc(ctx->capacity * sizeof(int));
+}
+
+static void DedupCtxDestroy(struct DedupCtx *ctx)
+{
+	free(ctx->vertices_to_delete);
+	memset(ctx, 0, sizeof(*ctx));
+}
+
+static void DedupCtxPushBack(struct DedupCtx *ctx, int i)
+{
+	if (ctx->size == ctx->capacity) {
+		static const double growth_factor = 1.7;
+		ctx->capacity *= growth_factor;
+		ctx->vertices_to_delete = realloc(ctx->vertices_to_delete,
+			ctx->capacity * sizeof(int));
+	}
+	ctx->vertices_to_delete[ctx->size] = i;
+	++ctx->size;
+}
+
+static int DedupVisitor(struct GeoVertexArray* va, int i, void *ctx)
+{
+	(void)va;
+	struct DedupCtx *dedup_ctx = ctx;
+	if (i < dedup_ctx->self) {
+		DedupCtxPushBack(dedup_ctx, dedup_ctx->self);
+	        return 0;
+	}
+	return 1;
+}
+
+void GeoHODeleteDuplicates(struct GeoHashedOctree *tree, double eps,
+	GeoVertexDestructor dtor, void *ctx)
+{
+	struct DedupCtx dedup_ctx;
+	DedupCtxInitialize(&dedup_ctx);
+	for (int i = 0; i < tree->vertices.size; ++i) {
+		dedup_ctx.self = i;
+		struct GeoPoint p = {
+			tree->vertices.x[i],
+			tree->vertices.y[i],
+			tree->vertices.z[i]};
+		GeoHOVisitNearVertices(tree, &p, eps, DedupVisitor, &dedup_ctx);
+	}
+	char *deleted = calloc(tree->vertices.size, sizeof(*deleted));
+	for (int i = 0; i < dedup_ctx.size; ++i) {
+		int ii = dedup_ctx.vertices_to_delete[i];
+		dtor(tree->vertices.ptrs[ii], ctx);
+		tree->vertices.ptrs[ii] = 0;
+		deleted[ii] = 1;
+	}
+	int j = 0;
+	for (int i = 0; i < tree->vertices.size; ++i) {
+		if (0 == deleted[i]) {
+			tree->vertices.x[j] = tree->vertices.x[i];
+			tree->vertices.y[j] = tree->vertices.y[i];
+			tree->vertices.z[j] = tree->vertices.z[i];
+			tree->vertices.ptrs[j] = tree->vertices.ptrs[i];
+			++j;
+		}
+	}
+	tree->vertices.size = j;
+	free(deleted);
+	DedupCtxDestroy(&dedup_ctx);
+}
+

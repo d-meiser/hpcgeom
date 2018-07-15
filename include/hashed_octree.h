@@ -10,18 +10,16 @@
 extern "C" {
 #endif
 
-struct GeoHashedOctreeNode;
 
 struct GeoHashedOctree
 {
 	struct GeoVertexArray vertices;
 	GeoSpatialHash *hashes;
 	struct GeoBoundingBox bbox;
-	struct GeoHashedOctreeNode *root;
 };
 
-void GeoHOInitialize(struct GeoHashedOctree* tree, struct GeoBoundingBox b);
-void GeoHODestroy(struct GeoHashedOctree* tree);
+void GeoHOInitialize(struct GeoHashedOctree *tree, struct GeoBoundingBox b);
+void GeoHODestroy(struct GeoHashedOctree *tree);
 
 /** Insert items into tree
  *
@@ -30,13 +28,17 @@ void GeoHODestroy(struct GeoHashedOctree* tree);
  * @param begin Index of first vertex to insert.
  * @param end  One past index of last index to insert.
  */
-void GeoHOInsert(struct GeoHashedOctree* tree,
-	const struct GeoVertexArray* va, int begin, int end);
+void GeoHOInsert(struct GeoHashedOctree *tree,
+	const struct GeoVertexArray *va, int begin, int end);
 
-typedef int GeoVertexVisitor(struct GeoVertexArray* va, int i, void* ctx);
+typedef int GeoVertexVisitor(struct GeoVertexArray *va, int i, void *ctx);
 void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,
-	const struct GeoPoint* p, double eps,
-	GeoVertexVisitor visitor, void* ctx);
+	const struct GeoPoint *p, double eps,
+	GeoVertexVisitor visitor, void *ctx);
+
+typedef void GeoVertexDestructor(void *ptr, void *ctx);
+void GeoHODeleteDuplicates(struct GeoHashedOctree *tree, double eps,
+	GeoVertexDestructor dtor, void *ctx);
 
 #ifdef __cplusplus
 }
