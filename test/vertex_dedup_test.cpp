@@ -24,7 +24,6 @@ Configuration parse_command_line(int argn, char **argv);
 struct GeoHashedOctree BuildTreeWithRandomItems(struct GeoBoundingBox bbox, int n, int *indices);
 struct GeoHashedOctree BuildTreeFromOrderedItems(
     struct GeoBoundingBox bbox, const struct GeoVertexArray *va);
-void VertexDedup(struct GeoHashedOctree* tree, double epsilon);
 
 
 int main(int argn, char **argv) {
@@ -55,7 +54,7 @@ int main(int argn, char **argv) {
     results.ConstructTreeWithRandomItems += (end - start) / 1.0e6;
 
     start = rdtsc();
-    VertexDedup(&tree, conf.epsilon);
+    GeoHODeleteDuplicates(&tree, conf.epsilon, 0, 0);
     end = rdtsc();
     std::cout << "      \"VertexDedup1\":                 " << (end - start) / 1.0e6 << ",\n";
     results.VertexDedup1 += (end - start) / 1.0e6;
@@ -68,7 +67,7 @@ int main(int argn, char **argv) {
     results.BuildTreeFromOrderedItems += (end - start) / 1.0e6;
 
     start = rdtsc();
-    VertexDedup(&tree2, conf.epsilon);
+    GeoHODeleteDuplicates(&tree2, conf.epsilon, 0, 0);
     end = rdtsc();
     std::cout << "      \"VertexDedup2\":                 " << (end - start) / 1.0e6 << "\n";
     results.VertexDedup2 += (end - start) / 1.0e6;
@@ -119,34 +118,6 @@ struct GeoHashedOctree BuildTreeFromOrderedItems(
   GeoHOInitialize(&tree, bbox);
   GeoHOInsert(&tree, va, 0, va->size);
   return tree;
-}
-
-struct DedupCtx {
-  int self;
-  std::vector<int> duplicate_indices;
-};
-
-extern "C"
-int DedupVisitor(struct GeoVertexArray* va, int i, void* ctx)
-{
-  DedupCtx *dedup_ctx = static_cast<DedupCtx*>(ctx);
-  if (i < dedup_ctx->self) {
-    dedup_ctx->duplicate_indices.push_back(dedup_ctx->self);
-  }
-  // Always stop searching. Either we're first or some other vertex was earlier
-  // and we marked ourselves for delete.
-  return 0;
-}
-
-void VertexDedup(struct GeoHashedOctree *tree, double epsilon) {
-  DedupCtx ctx;
-  int n = tree->vertices.size;
-  for (int i = 0; i < n; ++i) {
-    ctx.self = i;
-    struct GeoPoint p =
-        {tree->vertices.x[i], tree->vertices.y[i], tree->vertices.z[i]};
-    GeoHOVisitNearVertices(tree, &p, epsilon, DedupVisitor, &ctx);
-  }
 }
 
 

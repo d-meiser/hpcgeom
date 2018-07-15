@@ -357,7 +357,7 @@ void GeoHODeleteDuplicates(struct GeoHashedOctree *tree, double eps,
 	char *deleted = calloc(tree->vertices.size, sizeof(*deleted));
 	for (int i = 0; i < dedup_ctx.size; ++i) {
 		int ii = dedup_ctx.vertices_to_delete[i];
-		dtor(tree->vertices.ptrs[ii], ctx);
+		if (dtor) dtor(tree->vertices.ptrs[ii], ctx);
 		tree->vertices.ptrs[ii] = 0;
 		deleted[ii] = 1;
 	}
