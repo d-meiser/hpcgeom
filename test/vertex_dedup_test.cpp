@@ -10,6 +10,7 @@
 struct Configuration {
   int num_vertices;
   int num_iter;
+  double epsilon;
 };
 
 struct TimingResults {
@@ -23,7 +24,7 @@ Configuration parse_command_line(int argn, char **argv);
 struct GeoHashedOctree BuildTreeWithRandomItems(struct GeoBoundingBox bbox, int n, int *indices);
 struct GeoHashedOctree BuildTreeFromOrderedItems(
     struct GeoBoundingBox bbox, const struct GeoVertexArray *va);
-void VertexDedup(struct GeoHashedOctree* tree);
+void VertexDedup(struct GeoHashedOctree* tree, double epsilon);
 
 
 int main(int argn, char **argv) {
@@ -37,6 +38,7 @@ int main(int argn, char **argv) {
   std::cout << "{\n";
   std::cout << "  \"num_vertices\": " << conf.num_vertices << ",\n";
   std::cout << "  \"num_iter\": " << conf.num_iter << ",\n";
+  std::cout << "  \"epsilon\": " << conf.epsilon << ",\n";
   for (int i = 0; i < conf.num_iter; ++i) {
 
     std::cout << "  \"iteration " << i << "\": {\n";
@@ -53,7 +55,7 @@ int main(int argn, char **argv) {
     results.ConstructTreeWithRandomItems += (end - start) / 1.0e6;
 
     start = rdtsc();
-    VertexDedup(&tree);
+    VertexDedup(&tree, conf.epsilon);
     end = rdtsc();
     std::cout << "      \"VertexDedup1\":                 " << (end - start) / 1.0e6 << ",\n";
     results.VertexDedup1 += (end - start) / 1.0e6;
@@ -66,7 +68,7 @@ int main(int argn, char **argv) {
     results.BuildTreeFromOrderedItems += (end - start) / 1.0e6;
 
     start = rdtsc();
-    VertexDedup(&tree2);
+    VertexDedup(&tree2, conf.epsilon);
     end = rdtsc();
     std::cout << "      \"VertexDedup2\":                 " << (end - start) / 1.0e6 << "\n";
     results.VertexDedup2 += (end - start) / 1.0e6;
@@ -130,20 +132,20 @@ int DedupVisitor(struct GeoVertexArray* va, int i, void* ctx)
   DedupCtx *dedup_ctx = static_cast<DedupCtx*>(ctx);
   if (i < dedup_ctx->self) {
     dedup_ctx->duplicate_indices.push_back(dedup_ctx->self);
-    return 0;
   }
-  return 1;
+  // Always stop searching. Either we're first or some other vertex was earlier
+  // and we marked ourselves for delete.
+  return 0;
 }
 
-void VertexDedup(struct GeoHashedOctree *tree) {
-  double eps = 1.0e-3;
+void VertexDedup(struct GeoHashedOctree *tree, double epsilon) {
   DedupCtx ctx;
   int n = tree->vertices.size;
   for (int i = 0; i < n; ++i) {
     ctx.self = i;
     struct GeoPoint p =
         {tree->vertices.x[i], tree->vertices.y[i], tree->vertices.z[i]};
-    GeoHOVisitNearVertices(tree, &p, eps, DedupVisitor, &ctx);
+    GeoHOVisitNearVertices(tree, &p, epsilon, DedupVisitor, &ctx);
   }
 }
 
@@ -159,13 +161,15 @@ static int find_string(std::string s, int argn, char **argv) {
 static const std::string usage(
     "Usage: vertex_dedup_test "
     "[--num_vertices num_vertices] "
-    "[--num_iter num_iter]"
+    "[--num_iter num_iter] "
+    "[--epsilon epsilon] "
     );
 
 Configuration parse_command_line(int argn, char **argv) {
   Configuration conf;
   conf.num_vertices = 100;
   conf.num_iter = 10;
+  conf.epsilon = 1.0e-3;
 
   int i;
   i = find_string("--help", argn, argv);
@@ -192,6 +196,16 @@ Configuration parse_command_line(int argn, char **argv) {
       exit(1);
     }
     conf.num_iter = std::stoi(std::string(argv[i + 1]));
+  }
+
+  i = find_string("--epsilon", argn, argv);
+  if (i != argn) {
+    if (i == argn - 1) {
+      std::cout << "Error: epsilon missing." << std::endl;
+      std::cout << usage << std::endl;
+      exit(1);
+    }
+    conf.epsilon = std::stod(std::string(argv[i + 1]));
   }
 
   return conf;
