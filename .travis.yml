@@ -6,10 +6,6 @@ compiler:
 env:
   - BUILD_TYPE=Release
   - BUILD_TYPE=Debug
-matrix:
-  exclude:
-    - compiler: clang
-      env: BULD_TYPE=Release
 addons:
   apt:
     packages:
