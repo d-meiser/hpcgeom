@@ -185,19 +185,21 @@ void find_overlapping_nodes(
 	const struct GeoBoundingBox *p_bbox,
 	struct NodeList **node_list)
 {
-	struct GeoBoundingBox this_box = GeoNodeBox(node, bbox);
-	if (boxes_overlap(p_bbox, &this_box)) {
+	if (boxes_overlap(p_bbox, bbox)) {
 		// Terminate if we can't subdivide further or if p_bbox
 		// contains this node. Otherwise recurse.
 		if (GeoNodeLevel(node) == GeoNodeMaxDepth() ||
-		    box_contains(p_bbox, &this_box)) {
+		    box_contains(p_bbox, bbox)) {
 			*node_list = NodeListPush(*node_list, node);
 		} else {
 			GeoNodeKey children[8];
 			GeoNodeComputeChildKeys(node, children);
+			struct GeoBoundingBox child_boxes[8];
+			GeoComputeChildBoxes(bbox, child_boxes);
+			// TODO: Compute child boxes here
 			for (int i = 0; i < 8; ++i) {
 				find_overlapping_nodes(children[i],
-					bbox, p_bbox, node_list);
+					&child_boxes[i], p_bbox, node_list);
 			}
 		}
 	}
@@ -210,8 +212,9 @@ static struct NodeList *find_visit_list(const struct GeoPoint *p, double eps,
 		{ p->x - 0.5 * eps, p->y - 0.5 * eps, p->z - 0.5 * eps },
 		{ p->x + 0.5 * eps, p->y + 0.5 * eps, p->z + 0.5 * eps }};
 	GeoNodeKey node = GeoNodeSmallestContaining(bbox, &p_bbox);
+	struct GeoBoundingBox smallest_bbox = GeoNodeBox(node, bbox);
 	struct NodeList *visit_list = 0;
-	find_overlapping_nodes(node, bbox, &p_bbox, &visit_list);
+	find_overlapping_nodes(node, &smallest_bbox, &p_bbox, &visit_list);
 	return visit_list;
 }
 

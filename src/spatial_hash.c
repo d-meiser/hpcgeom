@@ -123,6 +123,34 @@ void GeoNodeComputeChildKeys(GeoNodeKey key, GeoNodeKey* child_keys)
 	}
 }
 
+void GeoComputeChildBoxes(
+	const struct GeoBoundingBox *bbox, struct GeoBoundingBox *child_boxes)
+{
+	double lx = 0.5 * (bbox->max.x - bbox->min.x);
+	double ly = 0.5 * (bbox->max.y - bbox->min.y);
+	double lz = 0.5 * (bbox->max.z - bbox->min.z);
+	int m = 0;
+	for (int i = 0; i < 2; ++i) {
+		double min_z = bbox->min.z + i * lz;
+		double max_z = min_z + lz;
+		for (int j = 0; j < 2; ++j) {
+			double min_y = bbox->min.y + j * ly;
+			double max_y = min_y + ly;
+			for (int k = 0; k < 2; ++k) {
+				double min_x = bbox->min.x + k * lx;
+				double max_x = min_x + lx;
+				child_boxes[m].min.x = min_x;
+				child_boxes[m].min.y = min_y;
+				child_boxes[m].min.z = min_z;
+				child_boxes[m].max.x = max_x;
+				child_boxes[m].max.y = max_y;
+				child_boxes[m].max.z = max_z;
+				++m;
+			}
+		}
+	}
+}
+
 int GeoNodeValidKey(GeoNodeKey key)
 {
 	if (key & (1u << (BITS_PER_DIM * 3 + 1))) return 0;

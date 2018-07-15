@@ -16,6 +16,8 @@ typedef uint32_t GeoNodeKey;
 GeoNodeKey GeoNodeRoot();
 int GeoNodeMaxDepth();
 void GeoNodeComputeChildKeys(GeoNodeKey key, GeoNodeKey *child_keys);
+void GeoComputeChildBoxes(
+	const struct GeoBoundingBox *bbox, struct GeoBoundingBox *child_boxes);
 int GeoNodeValidKey(GeoNodeKey key);
 int GeoNodeLevel(GeoNodeKey key);
 GeoNodeKey GeoNodeParent(GeoNodeKey key);
@@ -24,8 +26,6 @@ GeoSpatialHash GeoNodeEnd(GeoNodeKey key);
 void GeoNodePrint(GeoNodeKey key);
 struct GeoBoundingBox GeoNodeBox(GeoNodeKey key,
 	const struct GeoBoundingBox *bbox);
-struct GeoBoundingBox ComputeChildBox(
-	const struct GeoBoundingBox *bbox, int octant);
 GeoNodeKey GeoNodeSmallestContaining(const struct GeoBoundingBox* root_box,
 	const struct GeoBoundingBox *b);
 
