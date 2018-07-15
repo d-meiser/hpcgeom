@@ -16,7 +16,7 @@ script:
   - mkdir -p build
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS_RELEASE='-O3 -ftree-vectorize -march=native -ffast-math' -DCMAKE_C_FLAGS_RELEASE='-O3 -ftree-vectorize -march=native -ffast-math' ..
-  - make VERBOSE=1 -j2
+  - make -j2
   - ctest --output-on-failure
   - ./test/vertex_dedup_test --num_iter 2 --num_vertices 100000 --epsilon 1.0e-3
   - ./test/vertex_dedup_test --num_iter 2 --num_vertices 100000 --epsilon 1.0e-4
