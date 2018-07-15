@@ -16,5 +16,11 @@ foreach(t ${TESTS})
 	add_test(${t} ${t}_test)
 endforeach()
 
-add_executable(vertex_dedup_test vertex_dedup_test.cpp)
-target_link_libraries(vertex_dedup_test test_utilities hpcgeo)
+set(PERFORMANCE_TESTS
+	transformation
+	vertex_dedup
+	)
+foreach(t ${PERFORMANCE_TESTS})
+	add_executable(${t}_test ${t}_test.cpp)
+	target_link_libraries(${t}_test test_utilities hpcgeo)
+endforeach()
