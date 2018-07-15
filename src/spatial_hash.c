@@ -204,6 +204,7 @@ void GeoNodePrint(GeoNodeKey key)
 		} else {
 			printf("0");
 		}
+		if (i % 3 == 0) printf(" ");
 	}
 }
 
