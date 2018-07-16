@@ -15,16 +15,29 @@ before_install:
 script:
   - mkdir -p build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_CXX_FLAGS_RELEASE='-O3 -ftree-vectorize -march=native -ffast-math' -DCMAKE_C_FLAGS_RELEASE='-O3 -ftree-vectorize -march=native -ffast-math' ..
+  - |
+    cmake \
+    -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+    -DCMAKE_CXX_FLAGS_RELEASE='-O3 -DNDEBUG -ftree-vectorize -march=native -ffast-math' \
+    -DCMAKE_C_FLAGS_RELEASE='-O3 -DNDEBUG -ftree-vectorize -march=native -ffast-math' \
+    -DCMAKE_CXX_FLAGS_DEBUG='-O0 -g -pg -ftest-coverage -fprofile-arcs' \
+    -DCMAKE_C_FLAGS_DEBUG='-O0 -g -pg -ftest-coverage -fprofile-arcs' \
+    ..
   - make -j2
   - ctest --output-on-failure
-  - ./test/vertex_dedup_test --num_iter 2 --num_vertices 100000 --epsilon 1.0e-3
-  - ./test/vertex_dedup_test --num_iter 2 --num_vertices 100000 --epsilon 1.0e-4
-  - ./test/transformation_test --num_iter 2 --num_vertices 100000
+  - |
+    if [ ${BUILD_TYPE} = "Release" ]; then
+      ./test/vertex_dedup_test --num_iter 2 --num_vertices 100000 --epsilon 1.0e-3
+      ./test/vertex_dedup_test --num_iter 2 --num_vertices 100000 --epsilon 1.0e-4
+      ./test/transformation_test --num_iter 2 --num_vertices 100000
+    fi
 after_success:
-  - lcov -d test -d src -base-directory .. -c -o coverage.info
-  - lcov --remove coverage.info '/usr/*' -o coverage.info
-  - lcov --remove coverage.info 'gtest*' -o coverage.info
-  - lcov --remove coverage.info 'test/*' -o coverage.info
-  - cd ..
-  - coveralls-lcov build/coverage.info
+  - |
+    if [ ${BUILD_TYPE} = "Debug" ]; then
+      lcov -d test -d src -base-directory .. -c -o coverage.info
+      lcov --remove coverage.info '/usr/*' -o coverage.info
+      lcov --remove coverage.info 'gtest*' -o coverage.info
+      lcov --remove coverage.info 'test/*' -o coverage.info
+      cd ..
+      coveralls-lcov build/coverage.info
+    fi
