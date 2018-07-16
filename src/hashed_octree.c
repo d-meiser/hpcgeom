@@ -39,14 +39,13 @@ static uint32_t GetTag(uint64_t big_hash)
 
 static void ComputeHashes(const struct GeoBoundingBox *b,
 	const struct GeoVertexArray *va,
-	int begin, int end,
 	uint64_t *hashes)
 {
-	for (int i = 0; i < end - begin; ++i) {
+	for (int i = 0; i < va->size; ++i) {
 		struct GeoPoint p = {
-			va->x[begin + i],
-			va->y[begin + i],
-			va->z[begin + i]};
+			va->x[i],
+			va->y[i],
+			va->z[i]};
 		GeoSpatialHash hash = GeoComputeHash(b, &p);
 		hashes[i] = BigHash(hash, i);
 	}
@@ -64,11 +63,10 @@ static int hashes_are_sorted(GeoSpatialHash *h, int n)
 
 static void merge(
 	GeoSpatialHash **hashes_1, struct GeoVertexArray *va_1,
-	const uint64_t *hashes_2,
-	int begin, int end, const struct GeoVertexArray *va_2)
+	const uint64_t *hashes_2, const struct GeoVertexArray *va_2)
 {
-	int n1 =  va_1->size;
-	int n2 = end - begin;
+	int n1 = va_1->size;
+	int n2 = va_2->size;
 
 	struct GeoVertexArray temp_va;
 	GeoVAInitialize(&temp_va);
@@ -88,7 +86,7 @@ static void merge(
 			++i;
 		} else {
 			temp_hashes[k] = GetHash(hashes_2[j]);
-			int m = begin + GetTag(hashes_2[j]);
+			int m = GetTag(hashes_2[j]);
 			temp_va.x[k] = va_2->x[m];
 			temp_va.y[k] = va_2->y[m];
 			temp_va.z[k] = va_2->z[m];
@@ -110,7 +108,7 @@ static void merge(
 
 	while (j < n2) {
 		temp_hashes[k] = GetHash(hashes_2[j]);
-		int m = begin + GetTag(hashes_2[j]);
+		int m = GetTag(hashes_2[j]);
 		temp_va.x[k] = va_2->x[m];
 		temp_va.y[k] = va_2->y[m];
 		temp_va.z[k] = va_2->z[m];
@@ -128,15 +126,13 @@ static void merge(
 }
 
 void GeoHOInsert(struct GeoHashedOctree *tree,
-	const struct GeoVertexArray *va, int begin, int end)
+	const struct GeoVertexArray *va)
 {
-	int num_items = end - begin;
-	if (num_items <= 0) return;
 	uint64_t *new_hashes;
-	new_hashes = malloc(num_items * sizeof(*new_hashes));
-	ComputeHashes(&tree->bbox, va, begin, end, new_hashes);
-	GeoQsort((uint64_t*)new_hashes, num_items);
-	merge(&tree->hashes, &tree->vertices, new_hashes, begin, end, va);
+	new_hashes = malloc(va->size * sizeof(*new_hashes));
+	ComputeHashes(&tree->bbox, va, new_hashes);
+	GeoQsort((uint64_t*)new_hashes, va->size);
+	merge(&tree->hashes, &tree->vertices, new_hashes, va);
 	free(new_hashes);
 }
 

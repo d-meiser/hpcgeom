@@ -104,7 +104,7 @@ struct GeoHashedOctree BuildTreeWithRandomItems(
 
   struct GeoHashedOctree tree;
   GeoHOInitialize(&tree, bbox);
-  GeoHOInsert(&tree, &va, 0, n);
+  GeoHOInsert(&tree, &va);
 
   GeoVADestroy(&va);
 
@@ -116,7 +116,7 @@ struct GeoHashedOctree BuildTreeFromOrderedItems(
     const struct GeoVertexArray *va) {
   struct GeoHashedOctree tree;
   GeoHOInitialize(&tree, bbox);
-  GeoHOInsert(&tree, va, 0, va->size);
+  GeoHOInsert(&tree, va);
   return tree;
 }
 

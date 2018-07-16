@@ -21,15 +21,8 @@ struct GeoHashedOctree
 void GeoHOInitialize(struct GeoHashedOctree *tree, struct GeoBoundingBox b);
 void GeoHODestroy(struct GeoHashedOctree *tree);
 
-/** Insert items into tree
- *
- * @param tree The tree into which to insert.
- * @param va   The vertex array out of which to insert.
- * @param begin Index of first vertex to insert.
- * @param end  One past index of last index to insert.
- */
 void GeoHOInsert(struct GeoHashedOctree *tree,
-	const struct GeoVertexArray *va, int begin, int end);
+	const struct GeoVertexArray *va);
 
 typedef int GeoVertexVisitor(struct GeoVertexArray *va, int i, void *ctx);
 void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,

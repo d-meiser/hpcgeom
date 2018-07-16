@@ -41,7 +41,7 @@ TEST_F(HashedOctree, CanInsertItems) {
   vertex_array.z[1] = 0.3;
   vertex_array.x[1] = 0.3;
   vertex_array.ptrs[1] = (void*)0xF0ull;
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
   EXPECT_EQ(2, octree.vertices.size);
   EXPECT_NEAR(0.2, octree.vertices.x[0], eps);
   EXPECT_NEAR(0.2, octree.vertices.y[0], eps);
@@ -58,7 +58,7 @@ TEST_F(HashedOctree, InsertedItemsAreSorted) {
   GeoVAResize(&vertex_array, num_vertices);
   indices.resize(num_vertices);
   FillWithRandomItems(&vertex_array, &octree.bbox, num_vertices, &indices[0]);
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
   for (int i = 0; i < num_vertices - 1; ++i) {
     EXPECT_LE(octree.hashes[i], octree.hashes[i + 1]) <<
         ">>> i == " << i;
@@ -97,7 +97,7 @@ TEST_F(HashedOctree, VisitsNearbyVertexManufactured) {
   vertex_array.y[2] = 0.01;
   vertex_array.z[2] = 0.01;
 
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
 
   struct CountVisitsCtx ctx = {octree.vertices.ptrs[0], 0};
   struct GeoPoint p = {
@@ -119,7 +119,7 @@ TEST_F(HashedOctree, VisitsNearbyVertex) {
   vertex_array.y[1] = vertex_array.y[0];
   vertex_array.z[1] = vertex_array.z[0];
 
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
 
   struct CountVisitsCtx ctx = {octree.vertices.ptrs[0], 0};
   struct GeoPoint p = {
@@ -141,7 +141,7 @@ TEST_F(HashedOctree, VertexInNeighbouringNodeIsVisitedX) {
   vertex_array.y[1] = 0.1;
   vertex_array.z[1] = 0.1;
 
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
 
   struct CountVisitsCtx ctx = {&indices[0], 0};
   struct GeoPoint p = {
@@ -163,7 +163,7 @@ TEST_F(HashedOctree, VertexInNeighbouringNodeIsVisitedY) {
   vertex_array.y[1] = 0.5 + 0.2 * eps;
   vertex_array.z[1] = 0.1;
 
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
 
   struct CountVisitsCtx ctx = {&indices[0], 0};
   struct GeoPoint p = {
@@ -185,7 +185,7 @@ TEST_F(HashedOctree, VertexInNeighbouringNodeIsVisitedZ) {
   vertex_array.y[1] = 0.1;
   vertex_array.z[1] = 0.5 + 0.2 * eps;
 
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
 
   struct CountVisitsCtx ctx = {&indices[0], 0};
   struct GeoPoint p = {
@@ -200,13 +200,13 @@ TEST_F(HashedOctree, CanInsertMultipleTimes) {
   GeoVAResize(&vertex_array, num_vertices);
   indices.resize(2 * num_vertices);
   FillWithRandomItems(&vertex_array, &octree.bbox, num_vertices, &indices[0]);
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
   // Have to set the pointes to something different so CountVisits
   // doesn't identify the vertices as the same vertex.
   for (int i = 0; i < num_vertices; ++i) {
     vertex_array.ptrs[i] = &indices[num_vertices + i];
   }
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
 
   struct CountVisitsCtx ctx = {&indices[0], 0};
   struct GeoPoint p = {
@@ -253,7 +253,7 @@ TEST_F(HashedOctree, NoDuplicatesAfterDeduplicateSimple1) {
   vertex_array.x[1] = vertex_array.x[0];
   vertex_array.y[1] = vertex_array.y[0];
   vertex_array.z[1] = vertex_array.z[0];
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
   double my_eps = 1.0e-3;
   GeoHODeleteDuplicates(&octree, my_eps, TrivialDtor, 0);
   EXPECT_EQ(1, octree.vertices.size);
@@ -274,7 +274,7 @@ TEST_F(HashedOctree, NoDuplicatesAfterDeduplicateSimple2) {
   vertex_array.x[2] = 0.01;
   vertex_array.y[2] = 0.01;
   vertex_array.z[2] = 0.01;
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
   double my_eps = 1.0e-3;
   GeoHODeleteDuplicates(&octree, my_eps, TrivialDtor, 0);
   EXPECT_EQ(2, octree.vertices.size);
@@ -295,7 +295,7 @@ TEST_F(HashedOctree, NoDuplicatesAfterDeduplicateSimple3) {
   vertex_array.x[2] = vertex_array.x[0] + 0.1 * eps;
   vertex_array.y[2] = vertex_array.y[0];
   vertex_array.z[2] = vertex_array.z[0];
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
   double my_eps = 1.0e-3;
   GeoHODeleteDuplicates(&octree, my_eps, TrivialDtor, 0);
   EXPECT_EQ(1, octree.vertices.size);
@@ -313,7 +313,7 @@ TEST_F(HashedOctree, NoDuplicatesAfterDeduplicateSimple4) {
   vertex_array.x[1] = 3.62965736776768e-01;
   vertex_array.y[1] = 4.20491496714617e-01;
   vertex_array.z[1] = 8.47800529558627e-01;
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
   double my_eps = 1.0e-2;
   GeoHODeleteDuplicates(&octree, my_eps, TrivialDtor, 0);
   EXPECT_EQ(1, octree.vertices.size);
@@ -325,7 +325,7 @@ TEST_F(HashedOctree, NoDuplicatesAfterDeduplicate) {
   GeoVAResize(&vertex_array, num_vertices);
   indices.resize(num_vertices);
   FillWithRandomItems(&vertex_array, &octree.bbox, num_vertices, &indices[0]);
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
   double my_eps = 1.0e-2;
   GeoHODeleteDuplicates(&octree, my_eps, TrivialDtor, 0);
   EXPECT_EQ(0, count_close_pairs(&octree.vertices, my_eps));
@@ -341,7 +341,7 @@ TEST_F(HashedOctree, CanDealWithManyDuplicates) {
     vertex_array.y[i] = 0.3;
     vertex_array.z[i] = 0.4;
   }
-  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  GeoHOInsert(&octree, &vertex_array);
   double my_eps = 1.0e-2;
   GeoHODeleteDuplicates(&octree, my_eps, TrivialDtor, 0);
   EXPECT_EQ(0, count_close_pairs(&octree.vertices, my_eps));
