@@ -330,4 +330,21 @@ TEST_F(HashedOctree, NoDuplicatesAfterDeduplicate) {
   GeoHODeleteDuplicates(&octree, my_eps, TrivialDtor, 0);
   EXPECT_EQ(0, count_close_pairs(&octree.vertices, my_eps));
 }
+
+TEST_F(HashedOctree, CanDealWithManyDuplicates) {
+  int num_vertices = 200;
+  GeoVAResize(&vertex_array, num_vertices);
+  indices.resize(num_vertices);
+  FillWithRandomItems(&vertex_array, &octree.bbox, num_vertices, &indices[0]);
+  for (int i = 0; i < num_vertices; ++i) {
+    vertex_array.x[i] = 0.2;
+    vertex_array.y[i] = 0.3;
+    vertex_array.z[i] = 0.4;
+  }
+  GeoHOInsert(&octree, &vertex_array, 0, num_vertices);
+  double my_eps = 1.0e-2;
+  GeoHODeleteDuplicates(&octree, my_eps, TrivialDtor, 0);
+  EXPECT_EQ(0, count_close_pairs(&octree.vertices, my_eps));
+}
+
 }
