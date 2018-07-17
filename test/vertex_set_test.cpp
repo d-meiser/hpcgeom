@@ -23,4 +23,11 @@ TEST_F(VertexSet, Initialize) {
   EXPECT_TRUE(true);
 }
 
+TEST_F(VertexSet, CanInsertAVertex) {
+  int id;
+  void *p = (void*)0x1;
+  void *q = GeoVSInsert({{3.0, 3.0, 3.0}, p}, &id);
+  EXPECT_NE(p, q);
+}
+
 }
