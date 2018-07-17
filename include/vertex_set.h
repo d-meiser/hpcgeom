@@ -10,6 +10,7 @@
 extern "C" {
 #endif
 
+typedef uint32_t GeoId;
 struct GeoIdTable;
 
 struct GeoVertexSet
@@ -38,8 +39,8 @@ void GeoVSDestroy(struct GeoVertexSet* vs);
  *		// by q.
  * 	}
  * */
-void *GeoVSInsert(struct GeoVertex v, int *id);
-struct GeoVertex GeoVSGetVertexLocation(int id);
+void *GeoVSInsert(struct GeoVertex v, GeoId *id);
+struct GeoVertex GeoVSGetVertexLocation(GeoId id);
 
 #ifdef __cplusplus
 }

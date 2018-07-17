@@ -24,10 +24,19 @@ TEST_F(VertexSet, Initialize) {
 }
 
 TEST_F(VertexSet, CanInsertAVertex) {
-  int id;
+  GeoId id;
   void *p = (void*)0x1;
   void *q = GeoVSInsert({{3.0, 3.0, 3.0}, p}, &id);
   EXPECT_NE(p, q);
+}
+
+TEST_F(VertexSet, WhenInsertingVertexASecondTimeWeGetTheSameId) {
+  GeoId id1, id2;
+  void *p = (void*)0x1;
+  struct GeoPoint pt = {3.0, 3.0, 3.0};
+  GeoVSInsert({pt, p}, &id1);
+  GeoVSInsert({pt, p}, &id2);
+  EXPECT_EQ(id1, id2);
 }
 
 }

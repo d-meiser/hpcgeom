@@ -41,7 +41,7 @@ void GeoVSDestroy(struct GeoVertexSet *vs)
 	free(vs->id_table);
 }
 
-void *GeoVSInsert(struct GeoVertex v, int *d)
+void *GeoVSInsert(struct GeoVertex v, GeoId *d)
 {
 	(void)v;
 	*d = 0;
