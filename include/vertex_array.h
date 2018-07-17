@@ -1,6 +1,9 @@
 #ifndef VERTEX_ARRAY_H
 #define VERTEX_ARRAY_H
 
+#include <geo_export.h>
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -18,11 +21,12 @@ struct GeoVertexArray {
 	void** ptrs;
 };
 
-void GeoVAInitialize(struct GeoVertexArray* va);
-void GeoVADestroy(struct GeoVertexArray* va);
-void GeoVAResize(struct GeoVertexArray* va, int size);
-struct GeoVertexArray GeoVACopy(const struct GeoVertexArray* va);
-void GeoVASwap(struct GeoVertexArray *va1, struct GeoVertexArray *va2);
+GEO_EXPORT void GeoVAInitialize(struct GeoVertexArray* va);
+GEO_EXPORT void GeoVADestroy(struct GeoVertexArray* va);
+GEO_EXPORT void GeoVAResize(struct GeoVertexArray* va, int size);
+GEO_EXPORT struct GeoVertexArray GeoVACopy(const struct GeoVertexArray* va);
+GEO_EXPORT void GeoVASwap(struct GeoVertexArray *va1,
+	struct GeoVertexArray *va2);
 
 #ifdef __cplusplus
 }

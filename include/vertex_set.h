@@ -4,6 +4,7 @@
 #include <basic_types.h>
 #include <hashed_octree.h>
 #include <vertex_array.h>
+#include <geo_export.h>
 
 
 #ifdef __cplusplus
@@ -21,9 +22,9 @@ struct GeoVertexSet
 	double epsilon;
 };
 
-void GeoVSInitialize(struct GeoVertexSet* vs, struct GeoBoundingBox bbox,
-	double epsilon);
-void GeoVSDestroy(struct GeoVertexSet* vs);
+GEO_EXPORT void GeoVSInitialize(struct GeoVertexSet* vs,
+	struct GeoBoundingBox bbox, double epsilon);
+GEO_EXPORT void GeoVSDestroy(struct GeoVertexSet* vs);
 
 /** Insert if the vertex isn't in the set yet.
  *
@@ -39,8 +40,8 @@ void GeoVSDestroy(struct GeoVertexSet* vs);
  *		// by q.
  * 	}
  * */
-void *GeoVSInsert(struct GeoVertex v, GeoId *id);
-struct GeoVertex GeoVSGetVertexLocation(GeoId id);
+GEO_EXPORT void *GeoVSInsert(struct GeoVertex v, GeoId *id);
+GEO_EXPORT struct GeoVertex GeoVSGetVertexLocation(GeoId id);
 
 #ifdef __cplusplus
 }
