@@ -4,6 +4,7 @@ add_library(hpcgeo
 	spatial_hash.c
 	transformation.c
 	vertex_array.c
+	vertex_set.c
 	)
 target_include_directories(hpcgeo
 	PUBLIC
