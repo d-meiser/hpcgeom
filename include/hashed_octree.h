@@ -31,6 +31,9 @@ GEO_EXPORT void GeoHOVisitNearVertices(struct GeoHashedOctree *tree,
 	const struct GeoPoint *p, double eps,
 	GeoVertexVisitor visitor, void *ctx);
 
+
+/* The following are higher order utility functions. They don't require
+ * internals of GeoHashesOctree. */
 typedef void GeoVertexDestructor(void *ptr, void *ctx);
 GEO_EXPORT void GeoHODeleteDuplicates(struct GeoHashedOctree *tree, double eps,
 	GeoVertexDestructor dtor, void *ctx);

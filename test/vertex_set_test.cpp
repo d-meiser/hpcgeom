@@ -25,18 +25,25 @@ TEST_F(VertexSet, Initialize) {
 
 TEST_F(VertexSet, CanInsertAVertex) {
   GeoId id;
-  void *p = (void*)0x1;
-  void *q = GeoVSInsert({{3.0, 3.0, 3.0}, p}, &id);
-  EXPECT_NE(p, q);
+  struct GeoVertexData *q =
+      GeoVSInsert(&vertex_set, {3.0, 3.0, 3.0}, &id);
+  EXPECT_NE((struct GeoVertexData*)0, q);
 }
 
 TEST_F(VertexSet, WhenInsertingVertexASecondTimeWeGetTheSameId) {
   GeoId id1, id2;
-  void *p = (void*)0x1;
   struct GeoPoint pt = {3.0, 3.0, 3.0};
-  GeoVSInsert({pt, p}, &id1);
-  GeoVSInsert({pt, p}, &id2);
+  GeoVSInsert(&vertex_set, pt, &id1);
+  GeoVSInsert(&vertex_set, pt, &id2);
   EXPECT_EQ(id1, id2);
+}
+
+TEST_F(VertexSet, WhenInsertingDistinctItemsWeGetDifferentIds) {
+  GeoId id1, id2;
+  GeoVSInsert(&vertex_set, {3.0, 3.0, 3.0}, &id1);
+  GeoVSInsert(&vertex_set,
+      {3.0 + 3 * epsilon, 3.0 + 3 * epsilon, 3.0 + 3 * epsilon}, &id2);
+  EXPECT_NE(id1, id2);
 }
 
 }

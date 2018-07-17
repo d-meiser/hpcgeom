@@ -39,10 +39,10 @@ TEST(VertexArray, InitiallyHasSizeZero) {
 TEST(VertexArray, PointersAreInitiallyAligned) {
   struct GeoVertexArray va;
   GeoVAInitialize(&va);
-  EXPECT_EQ(0, (uint64_t)va.x % GEO_VA_ALIGNMENT);
-  EXPECT_EQ(0, (uint64_t)va.y % GEO_VA_ALIGNMENT);
-  EXPECT_EQ(0, (uint64_t)va.z % GEO_VA_ALIGNMENT);
-  EXPECT_EQ(0, (uint64_t)va.ptrs % GEO_VA_ALIGNMENT);
+  EXPECT_EQ(0ull, (uint64_t)va.x % GEO_VA_ALIGNMENT);
+  EXPECT_EQ(0ull, (uint64_t)va.y % GEO_VA_ALIGNMENT);
+  EXPECT_EQ(0ull, (uint64_t)va.z % GEO_VA_ALIGNMENT);
+  EXPECT_EQ(0ull, (uint64_t)va.ptrs % GEO_VA_ALIGNMENT);
   GeoVADestroy(&va);
 }
 
@@ -51,10 +51,10 @@ TEST(VertexArray, PointersAreAlignedAfterResize) {
   struct GeoVertexArray va;
   GeoVAInitialize(&va);
   GeoVAResize(&va, 200);
-  EXPECT_EQ(0, (uint64_t)va.x % GEO_VA_ALIGNMENT);
-  EXPECT_EQ(0, (uint64_t)va.y % GEO_VA_ALIGNMENT);
-  EXPECT_EQ(0, (uint64_t)va.z % GEO_VA_ALIGNMENT);
-  EXPECT_EQ(0, (uint64_t)va.ptrs % GEO_VA_ALIGNMENT);
+  EXPECT_EQ(0ull, (uint64_t)va.x % GEO_VA_ALIGNMENT);
+  EXPECT_EQ(0ull, (uint64_t)va.y % GEO_VA_ALIGNMENT);
+  EXPECT_EQ(0ull, (uint64_t)va.z % GEO_VA_ALIGNMENT);
+  EXPECT_EQ(0ull, (uint64_t)va.ptrs % GEO_VA_ALIGNMENT);
   GeoVADestroy(&va);
 }
 
