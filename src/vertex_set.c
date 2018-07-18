@@ -14,6 +14,7 @@ void GeoVSInitialize(struct GeoVertexSet *vs, struct GeoBoundingBox bbox,
 	vs->vertex_data = malloc(vs->capacity * sizeof(*vs->vertex_data));
 	vs->next_id = 0;
 	vs->epsilon = epsilon;
+	GeoHTInitialize(&vs->id_map);
 }
 
 void GeoVSDestroy(struct GeoVertexSet *vs)
@@ -24,6 +25,7 @@ void GeoVSDestroy(struct GeoVertexSet *vs)
 		GeoVDDestroy(&vs->vertex_data[i]);
 	}
 	free(vs->vertex_data);
+	GeoHTDestroy(&vs->id_map);
 }
 
 struct PointLocatorCtx
@@ -74,6 +76,14 @@ void push_back_vertex(struct GeoVertexArray *va, struct GeoVertex v)
 	va->ptrs[end] = v.ptr;
 }
 
+#define LOC_IN_SHORT_TABLE ((uint32_t)0x1u << 31)
+/*
+static int in_short_table(uint32_t location)
+{
+	return location & LOC_IN_SHORT_TABLE;
+}
+*/
+
 struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
 	const struct GeoPoint p, GeoId *id)
 {
@@ -100,6 +110,7 @@ struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
 	// and GeoVertexData pointer.
 	*id = vs->next_id;
 	++vs->next_id;
+	GeoHTInsert(&vs->id_map, *id, LOC_IN_SHORT_TABLE | vs->size);
 	if (vs->size == vs->capacity) {
 		static const double growth_factor = 1.7;
 		vs->capacity *= growth_factor;
