@@ -5,6 +5,11 @@
 #include <stdint.h>
 
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 struct GeoPoint {
 	double x;
 	double y;
@@ -36,6 +41,9 @@ struct GeoVertex {
 	struct GeoVertexData *ptr;
 };
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
