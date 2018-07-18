@@ -11,14 +11,14 @@
 extern "C" {
 #endif
 
-typedef uint32_t GeoId;
-struct GeoIdTable;
-
 struct GeoVertexSet
 {
-	struct GeoHashedOctree large;
-	struct GeoHashedOctree small;
-	struct GeoIdTable *id_table;
+	struct GeoHashedOctree octree;
+	struct GeoVertexArray short_list;
+	struct GeoVertexData *vertex_data;
+	uint32_t size;
+	uint32_t capacity;
+	GeoId next_id;
 	double epsilon;
 };
 
@@ -40,8 +40,9 @@ GEO_EXPORT void GeoVSDestroy(struct GeoVertexSet* vs);
  *		// by q.
  * 	}
  * */
-GEO_EXPORT void *GeoVSInsert(struct GeoVertex v, GeoId *id);
-GEO_EXPORT struct GeoVertex GeoVSGetVertexLocation(GeoId id);
+GEO_EXPORT struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
+	struct GeoPoint p, GeoId *id);
+GEO_EXPORT struct GeoVertex GeoVSGetVertex(GeoId id);
 
 #ifdef __cplusplus
 }

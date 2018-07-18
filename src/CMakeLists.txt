@@ -1,4 +1,5 @@
 add_library(hpcgeo
+	basic_types.c
 	hashed_octree.c
 	qsort.cpp
 	spatial_hash.c

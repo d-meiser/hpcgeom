@@ -1,49 +1,118 @@
 #include <vertex_set.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
-
-struct GeoIdTable
-{
-	uint32_t *locations;
-	uint32_t next_id;
-	uint32_t capacity;
-};
-
-void GeoITInitialize(struct GeoIdTable *table)
-{
-	memset(table, 0, sizeof(*table));
-	table->capacity = 32;
-	table->locations = malloc(table->capacity * sizeof(*table->locations));
-}
-
-void GeoITDestroy(struct GeoIdTable *table)
-{
-	free(table->locations);
-}
 
 void GeoVSInitialize(struct GeoVertexSet *vs, struct GeoBoundingBox bbox,
 	double epsilon)
 {
-	memset(vs, 0, sizeof(*vs));
-	GeoHOInitialize(&vs->large, bbox);
-	GeoHOInitialize(&vs->small, bbox);
-	vs->id_table = malloc(sizeof(*vs->id_table));
-	GeoITInitialize(vs->id_table);
+	GeoHOInitialize(&vs->octree, bbox);
+	GeoVAInitialize(&vs->short_list);
+	vs->size = 0;
+	vs->capacity = 32;
+	vs->vertex_data = malloc(vs->capacity * sizeof(*vs->vertex_data));
+	vs->next_id = 0;
 	vs->epsilon = epsilon;
 }
 
 void GeoVSDestroy(struct GeoVertexSet *vs)
 {
-	GeoHODestroy(&vs->large);
-	GeoHODestroy(&vs->small);
-	GeoITDestroy(vs->id_table);
-	free(vs->id_table);
+	GeoVADestroy(&vs->short_list);
+	GeoHODestroy(&vs->octree);
+	for (unsigned i = 0; i < vs->size; ++i) {
+		GeoVDDestroy(&vs->vertex_data[i]);
+	}
+	free(vs->vertex_data);
 }
 
-void *GeoVSInsert(struct GeoVertex v, GeoId *d)
+struct PointLocatorCtx
 {
-	(void)v;
-	*d = 0;
-	return (void*)0x2;
+	int location;
+};
+
+int locate_point(struct GeoVertexArray *va, int i, void *ctx)
+{
+	(void)va;
+	// Stop searching as soon as we encounter the first occurance of the
+	// point in the tree. Save the index of the point.
+	struct PointLocatorCtx *locator_ctx = ctx;
+	locator_ctx->location = i;
+	return 0;
 }
+
+static int find_point_in_tree(struct GeoHashedOctree *t,
+	const struct GeoPoint* p, double eps)
+{
+	struct PointLocatorCtx ctx;
+	ctx.location = -1;
+	GeoHOVisitNearVertices(t, p, eps, locate_point, &ctx);
+	return ctx.location;
+}
+
+static int find_point_in_array(struct GeoVertexArray *va,
+	const struct GeoPoint *p, double epsilon)
+{
+	int i = 0;
+	for (; i < va->size; ++i) {
+		if ((fabs(va->x[i] - p->x) < epsilon) &&
+		    (fabs(va->y[i] - p->y) < epsilon) &&
+		    (fabs(va->z[i] - p->z) < epsilon)) {
+			break;
+		}
+	}
+	return i;
+}
+
+void push_back_vertex(struct GeoVertexArray *va, struct GeoVertex v)
+{
+	int end = va->size;
+	GeoVAResize(va, va->size + 1);
+	va->x[end] = v.p.x;
+	va->y[end] = v.p.x;
+	va->z[end] = v.p.x;
+	va->ptrs[end] = v.ptr;
+}
+
+struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
+	const struct GeoPoint p, GeoId *id)
+{
+	// First look for the point in the octree.
+	int point_location =
+		find_point_in_tree(&vs->octree, &p, vs->epsilon);
+	if (point_location >= 0) {
+		struct GeoVertexData *vd =
+			vs->octree.vertices.ptrs[point_location];
+		*id = vd->id;
+		return vd;
+	}
+
+	// Then check in the short list.
+	point_location = find_point_in_array(&vs->short_list, &p, vs->epsilon);
+	if (point_location < vs->short_list.size) {
+		struct GeoVertexData *vd =
+			vs->short_list.ptrs[point_location];
+		*id = vd->id;
+		return vd;
+	}
+
+	// We don't have this point yet. Create a vertex and return its id
+	// and GeoVertexData pointer.
+	*id = vs->next_id;
+	++vs->next_id;
+	if (vs->size == vs->capacity) {
+		static const double growth_factor = 1.7;
+		vs->capacity *= growth_factor;
+		vs->vertex_data = realloc(vs->vertex_data, vs->capacity);
+	}
+	GeoVDInitialize(&vs->vertex_data[vs->size]);
+	vs->vertex_data[vs->size].id = *id;
+	vs->vertex_data[vs->size].edge_list = 0;
+	struct GeoVertexData *vd = &vs->vertex_data[vs->size];
+	++vs->size;
+	struct GeoVertex vertex = {p, vd};
+	push_back_vertex(&vs->short_list, vertex);
+
+	return vd;
+}
+
