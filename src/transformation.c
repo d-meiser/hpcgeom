@@ -1,5 +1,4 @@
 #include <transformation.h>
-#include <geo_config.h>
 #include <assert.h>
 
 
@@ -7,9 +6,6 @@
 #define MY_CHUNK_SIZE 16
 
 
-#ifdef GEO_HAVE_FUNCTION_MULTI_DISPATH
-__attribute__((target_clones("avx","sse4.2","default")))
-#endif
 static void apply_transform(double T[3][4], double **x, double**y, int n)
 {
 

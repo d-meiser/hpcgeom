@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include <string.h>
 #include <assert.h>
-#include <geo_config.h>
 
 
 #define ALIGNED_CHUNKED_COPY_CHUNK_SIZE 8
@@ -51,9 +50,6 @@ static void set_ptrs(void* d, int capacity, int alignment,
 	assert((void*)*ptrs >= (void*)*z);
 }
 
-#ifdef GEO_HAVE_FUNCTION_MULTI_DISPATH
-__attribute__((target_clones("avx2","avx","sse4.2","default")))
-#endif
 static void aligned_chunked_copy_double(double* dest, const double* src, int n)
 {
 	assert(n % ALIGNED_CHUNKED_COPY_CHUNK_SIZE == 0);
