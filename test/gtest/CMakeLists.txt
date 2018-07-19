@@ -12,5 +12,5 @@ target_include_directories(gtest_main
 	PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include
 	PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}
 	)
-target_link_libraries(gtest_main INTERFACE gtest)
+target_link_libraries(gtest_main PUBLIC gtest)
 
