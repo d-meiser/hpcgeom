@@ -25,9 +25,7 @@ TEST_F(VertexSet, Initialize) {
 
 TEST_F(VertexSet, CanInsertAVertex) {
   GeoId id;
-  struct GeoVertexData *q =
-      GeoVSInsert(&vertex_set, {3.0, 3.0, 3.0}, &id);
-  EXPECT_NE((struct GeoVertexData*)0, q);
+  GeoVSInsert(&vertex_set, {3.0, 3.0, 3.0}, &id);
 }
 
 TEST_F(VertexSet, WhenInsertingVertexASecondTimeWeGetTheSameId) {

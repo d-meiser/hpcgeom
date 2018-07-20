@@ -87,7 +87,7 @@ static uint32_t get_short_location(uint32_t loc)
 	return loc & (LOC_IN_SHORT_TABLE - 0x1u);
 }
 
-struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
+void GeoVSInsert(struct GeoVertexSet *vs,
 	const struct GeoPoint p, GeoId *id)
 {
 	// First look for the point in the octree.
@@ -97,7 +97,7 @@ struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
 		struct GeoVertexData *vd =
 			vs->octree.vertices.ptrs[point_location];
 		*id = vd->id;
-		return vd;
+		return;
 	}
 
 	// Then check in the short list.
@@ -106,7 +106,7 @@ struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
 		struct GeoVertexData *vd =
 			vs->short_list.ptrs[point_location];
 		*id = vd->id;
-		return vd;
+		return;
 	}
 
 	// We don't have this point yet. Create a vertex and return its id
@@ -126,8 +126,6 @@ struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
 	++vs->size;
 	struct GeoVertex vertex = {p, vd};
 	push_back_vertex(&vs->short_list, vertex);
-
-	return vd;
 }
 
 struct GeoVertex GeoVSGetVertex(struct GeoVertexSet *vs, GeoId id,
