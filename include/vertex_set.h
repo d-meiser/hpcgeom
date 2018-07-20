@@ -31,6 +31,7 @@ GEO_EXPORT void GeoVSInsert(struct GeoVertexSet *vs,
 	struct GeoPoint p, GeoId *id);
 GEO_EXPORT struct GeoVertex GeoVSGetVertex(struct GeoVertexSet *vs,
 	GeoId id, int *have_vertex);
+GEO_EXPORT void GeoVSOptimize(struct GeoVertexSet *vs);
 
 #ifdef __cplusplus
 }

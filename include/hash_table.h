@@ -20,6 +20,7 @@ GEO_EXPORT void GeoHTInsert(struct GeoHashTable *ht, uint32_t key,
 	uint32_t value);
 GEO_EXPORT int GeoHTLookup(struct GeoHashTable *ht, uint32_t key,
 	uint32_t *value);
+GEO_EXPORT void GeoHTClear(struct GeoHashTable *ht);
 
 #ifdef __cplusplus
 }

@@ -152,3 +152,17 @@ struct GeoVertex GeoVSGetVertex(struct GeoVertexSet *vs, GeoId id,
 	}
 	return v;
 }
+
+void GeoVSOptimize(struct GeoVertexSet *vs)
+{
+	// TODO: Find bounding box of short list and grow octree as needed.
+	GeoHOInsert(&vs->octree, &vs->short_list);
+	GeoVAClear(&vs->short_list);
+	GeoHTClear(&vs->id_map);
+	struct GeoVertexArray *vertices = &vs->octree.vertices;
+	for (int i = 0; i < vertices->size; ++i) {
+		struct GeoVertexData *vd = vertices->ptrs[i];
+		GeoHTInsert(&vs->id_map, vd->id, i);
+	}
+}
+

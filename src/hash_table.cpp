@@ -31,3 +31,9 @@ int GeoHTLookup(struct GeoHashTable *ht, uint32_t key, uint32_t *value) {
   return 0;
 }
 
+void GeoHTClear(struct GeoHashTable *ht) {
+  struct GeoHashTableImpl *impl =
+      static_cast<struct GeoHashTableImpl *>(ht->impl);
+  impl->map.clear();
+}
+

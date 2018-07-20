@@ -62,5 +62,13 @@ TEST_F(VertexSet, CanRetrieveVertex) {
   EXPECT_NEAR(p.z, v.p.z, 1.0e-10);
 }
 
+TEST_F(VertexSet, CanOptimize) {
+  GeoId id1, id2;
+  GeoVSInsert(&vertex_set, {3.0, 3.0, 3.0}, &id1);
+  GeoVSInsert(&vertex_set,
+      {3.0 + 3 * epsilon, 3.0 + 3 * epsilon, 3.0 + 3 * epsilon}, &id2);
+  GeoVSOptimize(&vertex_set);
+  EXPECT_NE(id1, id2);
+}
 
 }

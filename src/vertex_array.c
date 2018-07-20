@@ -155,3 +155,8 @@ void GeoVASwap(struct GeoVertexArray *va1, struct GeoVertexArray *va2)
 	*va1 = *va2;
 	*va2 = tmp;
 }
+
+void GeoVAClear(struct GeoVertexArray *va)
+{
+	va->size = 0;
+}

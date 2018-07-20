@@ -27,6 +27,7 @@ GEO_EXPORT void GeoVAResize(struct GeoVertexArray* va, int size);
 GEO_EXPORT struct GeoVertexArray GeoVACopy(const struct GeoVertexArray* va);
 GEO_EXPORT void GeoVASwap(struct GeoVertexArray *va1,
 	struct GeoVertexArray *va2);
+GEO_EXPORT void GeoVAClear(struct GeoVertexArray *va);
 
 #ifdef __cplusplus
 }
