@@ -131,7 +131,7 @@ void GeoVSInsert(struct GeoVertexSet *vs,
 struct GeoVertex GeoVSGetVertex(struct GeoVertexSet *vs, GeoId id,
 	int *have_vertex)
 {
-	struct GeoVertex v = {0};
+	struct GeoVertex v = {{0.0, 0.0, 0.0}, (void*)0x0};
 	uint32_t location;
 	*have_vertex = GeoHTLookup(&vs->id_map, id, &location);
 	if (*have_vertex) {
