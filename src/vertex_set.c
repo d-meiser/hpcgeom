@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <assert.h>
 
 
 void GeoVSInitialize(struct GeoVertexSet *vs, struct GeoBoundingBox bbox,
@@ -71,18 +72,20 @@ void push_back_vertex(struct GeoVertexArray *va, struct GeoVertex v)
 	int end = va->size;
 	GeoVAResize(va, va->size + 1);
 	va->x[end] = v.p.x;
-	va->y[end] = v.p.x;
-	va->z[end] = v.p.x;
+	va->y[end] = v.p.y;
+	va->z[end] = v.p.z;
 	va->ptrs[end] = v.ptr;
 }
 
 #define LOC_IN_SHORT_TABLE ((uint32_t)0x1u << 31)
-/*
 static int in_short_table(uint32_t location)
 {
 	return location & LOC_IN_SHORT_TABLE;
 }
-*/
+static uint32_t get_short_location(uint32_t loc)
+{
+	return loc & (LOC_IN_SHORT_TABLE - 0x1u);
+}
 
 struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
 	const struct GeoPoint p, GeoId *id)
@@ -127,3 +130,27 @@ struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
 	return vd;
 }
 
+struct GeoVertex GeoVSGetVertex(struct GeoVertexSet *vs, GeoId id,
+	int *have_vertex)
+{
+	struct GeoVertex v = {0};
+	uint32_t location;
+	*have_vertex = GeoHTLookup(&vs->id_map, id, &location);
+	if (*have_vertex) {
+		if (in_short_table(location)) {
+			location = get_short_location(location);
+			assert((int)location < vs->short_list.size);
+			v.p.x = vs->short_list.x[location];
+			v.p.y = vs->short_list.y[location];
+			v.p.z = vs->short_list.z[location];
+			v.ptr = vs->short_list.ptrs[location];
+		} else {
+			assert((int)location < vs->octree.vertices.size);
+			v.p.x = vs->octree.vertices.x[location];
+			v.p.y = vs->octree.vertices.y[location];
+			v.p.z = vs->octree.vertices.z[location];
+			v.ptr = vs->octree.vertices.ptrs[location];
+		}
+	}
+	return v;
+}

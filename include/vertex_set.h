@@ -44,7 +44,8 @@ GEO_EXPORT void GeoVSDestroy(struct GeoVertexSet* vs);
  * */
 GEO_EXPORT struct GeoVertexData *GeoVSInsert(struct GeoVertexSet *vs,
 	struct GeoPoint p, GeoId *id);
-GEO_EXPORT struct GeoVertex GeoVSGetVertex(GeoId id);
+GEO_EXPORT struct GeoVertex GeoVSGetVertex(struct GeoVertexSet *vs,
+	GeoId id, int *have_vertex);
 
 #ifdef __cplusplus
 }

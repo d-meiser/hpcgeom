@@ -46,4 +46,23 @@ TEST_F(VertexSet, WhenInsertingDistinctItemsWeGetDifferentIds) {
   EXPECT_NE(id1, id2);
 }
 
+TEST_F(VertexSet, EmptySetDoesntHaveVertex) {
+  int have_vertex;
+  GeoVSGetVertex(&vertex_set, 10, &have_vertex);
+  EXPECT_EQ(0, have_vertex);
+}
+
+TEST_F(VertexSet, CanRetrieveVertex) {
+  struct GeoPoint p = {1.0, 2.0, 3.0};
+  GeoId id;
+  GeoVSInsert(&vertex_set, p, &id);
+  int have_vertex;
+  struct GeoVertex v = GeoVSGetVertex(&vertex_set, id, &have_vertex);
+  EXPECT_NE(0, have_vertex);
+  EXPECT_NEAR(p.x, v.p.x, 1.0e-10);
+  EXPECT_NEAR(p.y, v.p.y, 1.0e-10);
+  EXPECT_NEAR(p.z, v.p.z, 1.0e-10);
+}
+
+
 }
