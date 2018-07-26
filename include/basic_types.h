@@ -41,6 +41,10 @@ struct GeoVertex {
 	struct GeoVertexData *ptr;
 };
 
+struct GeoEdge {
+	GeoId vertices[2];
+};
+
 #ifdef __cplusplus
 }
 #endif
