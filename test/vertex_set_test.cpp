@@ -24,12 +24,12 @@ TEST_F(VertexSet, Initialize) {
 }
 
 TEST_F(VertexSet, CanInsertAVertex) {
-  GeoId id;
+  GeoVertexId id;
   GeoVSInsert(&vertex_set, {3.0, 3.0, 3.0}, &id);
 }
 
 TEST_F(VertexSet, WhenInsertingVertexASecondTimeWeGetTheSameId) {
-  GeoId id1, id2;
+  GeoVertexId id1, id2;
   struct GeoPoint pt = {3.0, 3.0, 3.0};
   GeoVSInsert(&vertex_set, pt, &id1);
   GeoVSInsert(&vertex_set, pt, &id2);
@@ -37,7 +37,7 @@ TEST_F(VertexSet, WhenInsertingVertexASecondTimeWeGetTheSameId) {
 }
 
 TEST_F(VertexSet, WhenInsertingDistinctItemsWeGetDifferentIds) {
-  GeoId id1, id2;
+  GeoVertexId id1, id2;
   GeoVSInsert(&vertex_set, {3.0, 3.0, 3.0}, &id1);
   GeoVSInsert(&vertex_set,
       {3.0 + 3 * epsilon, 3.0 + 3 * epsilon, 3.0 + 3 * epsilon}, &id2);
@@ -52,7 +52,7 @@ TEST_F(VertexSet, EmptySetDoesntHaveVertex) {
 
 TEST_F(VertexSet, CanRetrieveVertex) {
   struct GeoPoint p = {1.0, 2.0, 3.0};
-  GeoId id;
+  GeoVertexId id;
   GeoVSInsert(&vertex_set, p, &id);
   int have_vertex;
   struct GeoVertex v = GeoVSGetVertex(&vertex_set, id, &have_vertex);
@@ -63,7 +63,7 @@ TEST_F(VertexSet, CanRetrieveVertex) {
 }
 
 TEST_F(VertexSet, CanOptimize) {
-  GeoId id1, id2;
+  GeoVertexId id1, id2;
   GeoVSInsert(&vertex_set, {3.0, 3.0, 3.0}, &id1);
   GeoVSInsert(&vertex_set,
       {3.0 + 3 * epsilon, 3.0 + 3 * epsilon, 3.0 + 3 * epsilon}, &id2);

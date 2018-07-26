@@ -19,7 +19,7 @@ struct GeoVertexSet
 	struct GeoVertexData *vertex_data;
 	uint32_t size;
 	uint32_t capacity;
-	GeoId next_id;
+	GeoVertexId next_id;
 	double epsilon;
 	struct GeoHashTable id_map;
 };
@@ -28,9 +28,9 @@ GEO_EXPORT void GeoVSInitialize(struct GeoVertexSet* vs,
 	struct GeoBoundingBox bbox, double epsilon);
 GEO_EXPORT void GeoVSDestroy(struct GeoVertexSet* vs);
 GEO_EXPORT void GeoVSInsert(struct GeoVertexSet *vs,
-	struct GeoPoint p, GeoId *id);
+	struct GeoPoint p, GeoVertexId *id);
 GEO_EXPORT struct GeoVertex GeoVSGetVertex(struct GeoVertexSet *vs,
-	GeoId id, int *have_vertex);
+	GeoVertexId id, int *have_vertex);
 GEO_EXPORT void GeoVSOptimize(struct GeoVertexSet *vs);
 
 #ifdef __cplusplus

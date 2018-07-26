@@ -27,9 +27,9 @@ struct GeoEdgeList {
 	struct GeoEdge *edge;
 };
 
-typedef uint32_t GeoId;
+typedef uint32_t GeoVertexId;
 struct GeoVertexData {
-	GeoId id;
+	GeoVertexId id;
 	struct GeoEdgeList *edge_list;
 };
 
@@ -42,7 +42,7 @@ struct GeoVertex {
 };
 
 struct GeoEdge {
-	GeoId vertices[2];
+	GeoVertexId vertices[2];
 };
 
 #ifdef __cplusplus

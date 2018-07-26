@@ -88,7 +88,7 @@ static uint32_t get_short_location(uint32_t loc)
 }
 
 void GeoVSInsert(struct GeoVertexSet *vs,
-	const struct GeoPoint p, GeoId *id)
+	const struct GeoPoint p, GeoVertexId *id)
 {
 	// First look for the point in the octree.
 	int point_location =
@@ -128,7 +128,7 @@ void GeoVSInsert(struct GeoVertexSet *vs,
 	push_back_vertex(&vs->short_list, vertex);
 }
 
-struct GeoVertex GeoVSGetVertex(struct GeoVertexSet *vs, GeoId id,
+struct GeoVertex GeoVSGetVertex(struct GeoVertexSet *vs, GeoVertexId id,
 	int *have_vertex)
 {
 	struct GeoVertex v = {{0.0, 0.0, 0.0}, (void*)0x0};
