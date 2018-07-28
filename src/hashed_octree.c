@@ -131,7 +131,7 @@ void GeoHOInsert(struct GeoHashedOctree *tree,
 	uint64_t *new_hashes;
 	new_hashes = malloc(va->size * sizeof(*new_hashes));
 	ComputeHashes(&tree->bbox, va, new_hashes);
-	GeoQsort((uint64_t*)new_hashes, va->size);
+	GeoQsort(new_hashes, va->size);
 	merge(&tree->hashes, &tree->vertices, new_hashes, va);
 	free(new_hashes);
 }

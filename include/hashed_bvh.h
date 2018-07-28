@@ -9,13 +9,15 @@
 extern "C" {
 #endif
 
+#define GEO_HASHED_BVH_MAX_DEPTH 10
+
 struct GeoHashedBvh {
 	struct GeoBoundingBox *volumes;
-	void *data;
+	void **data;
 	GeoSpatialHash *hashes;
 	int size;
 	int capacity;
-	int levels[11];
+	int level_begin[GEO_HASHED_BVH_MAX_DEPTH + 1];
 	struct GeoBoundingBox bbox;
 };
 
@@ -23,8 +25,8 @@ GEO_EXPORT void GeoHBInitialize(struct GeoHashedBvh *bvh,
 	struct GeoBoundingBox bbox);
 GEO_EXPORT void GeoHBDestroy(struct GeoHashedBvh *bvh);
 GEO_EXPORT void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
-	const struct GeoBoundingBox *volumes, const void *data);
-typedef int GeoVolumeVisitor(struct GeoBoundingBox *volumes, void *data, int i,
+	struct GeoBoundingBox *volumes, void **data);
+typedef int GeoVolumeVisitor(struct GeoBoundingBox *volumes, void **data, int i,
 	void *ctx);
 GEO_EXPORT void GeoHBVisitIntersectingVolumes(struct GeoHashedBvh *bvh,
 	const struct GeoBoundingBox *volume,

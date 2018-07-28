@@ -1,6 +1,9 @@
 #include <hashed_bvh.h>
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <qsort.h>
+#include <spatial_hash.h>
 
 
 static void reserve_space(struct GeoHashedBvh *bvh, int capacity)
@@ -29,5 +32,179 @@ void GeoHBDestroy(struct GeoHashedBvh *bvh)
 	free(bvh->volumes);
 	free(bvh->data);
 	free(bvh->hashes);
+}
+
+#define MY_MIN(a, b) (((a) < (b)) ? (a) : (b))
+#define MY_MAX(a, b) (((a) > (b)) ? (a) : (b))
+
+static struct GeoBoundingBox find_enclosing_box(struct GeoBoundingBox b,
+	int n, const struct GeoBoundingBox *volumes)
+{
+	for (int i = 0; i < n; ++i) {
+ 		b.min.z = MY_MIN(b.min.z, volumes[i].min.z);
+ 		b.min.y = MY_MIN(b.min.y, volumes[i].min.y);
+		b.min.z = MY_MIN(b.min.z, volumes[i].min.z);
+		b.max.x = MY_MAX(b.max.x, volumes[i].max.x);
+		b.max.y = MY_MAX(b.max.y, volumes[i].max.y);
+		b.max.z = MY_MAX(b.max.z, volumes[i].max.z);
+	}
+	return b;
+}
+
+static uint64_t BigHash(uint32_t hash, uint32_t tag)
+{
+	// Store the hash in the higher order bits so we sort by that.
+	return ((uint64_t)hash << 32) | (uint64_t)tag;
+};
+
+static uint32_t GetHash(uint64_t big_hash)
+{
+	return (uint32_t)(0x00000000FFFFFFFFull & (big_hash >> 32));
+}
+
+static uint32_t GetTag(uint64_t big_hash)
+{
+	return (uint32_t)(0x00000000FFFFFFFFull & big_hash);
+}
+
+
+static void ComputeHashes(const struct GeoBoundingBox *b,
+	const struct GeoBoundingBox *boxes,
+	int n,
+	uint64_t *hashes)
+{
+	for (int i = 0; i < n; ++i) {
+		GeoSpatialHash hash = GeoNodeSmallestContaining(b, &boxes[i]);
+		hashes[i] = BigHash(hash, i);
+	}
+}
+
+static int level_partition(int max_level, uint64_t *hashes, int l, int h)
+{
+	while (1) {
+		while (l < h && GeoNodeLevel(GetHash(hashes[l])) <=  max_level) ++l;
+		while (h > l && GeoNodeLevel(GetHash(hashes[h - 1])) > max_level) --h;
+		if (l != h) {
+			uint64_t tmp = hashes[l];
+			hashes[l] = hashes[h];
+			hashes[h] = tmp;
+		} else {
+			break;
+		}
+	}
+	return l;
+}
+
+#ifndef NDEBUG
+static int hashes_are_sorted(GeoSpatialHash *h, int n)
+{
+	for (int i = 0; i < n - 1; ++i) {
+		if (h[i] > h[i + 1]) return 0;
+	}
+	return 1;
+}
+#endif
+
+static void merge_level(
+	struct GeoHashedBvh *merged_bvh,
+	struct GeoHashedBvh *bvh,
+	int level,
+	int *level_begin,
+	const uint64_t *hashes,
+	struct GeoBoundingBox *volumes,
+	void **data)
+{
+	int n1 = bvh->level_begin[level + 1] - bvh->level_begin[level];
+	int n2 = level_begin[level + 1] - level_begin[level];
+
+	const GeoSpatialHash *hashes1 =
+		bvh->hashes + bvh->level_begin[level];
+	const uint64_t *hashes2 = hashes + level_begin[level];
+	GeoSpatialHash *hashes_merged = merged_bvh->hashes +
+		bvh->level_begin[level] + level_begin[level];
+
+	struct GeoBoundingBox *volumes1 =
+		bvh->volumes + bvh->level_begin[level];
+	struct GeoBoundingBox *volumes2 = volumes + level_begin[level];
+	struct GeoBoundingBox *volumes_merged = merged_bvh->volumes +
+		bvh->level_begin[level] + level_begin[level];
+
+	void **data1 = bvh->data + bvh->level_begin[level];
+	void **data2 = data + level_begin[level];
+	void **data_merged =
+		merged_bvh->data + bvh->level_begin[level] + level_begin[level];
+
+	int i = 0;
+	int j = 0;
+	int k = 0;
+
+	while (i < n1 && j < n2) {
+		if (hashes1[i] < GetHash(hashes2[j])) {
+			hashes_merged[k] = hashes1[i];
+			volumes_merged[k] = volumes1[i];
+			data_merged[k] = data1[i];
+			++i;
+		} else {
+			hashes_merged[k] = GetTag(hashes2[j]);
+			int m = GetTag(hashes2[j]);
+			volumes_merged[k] = volumes2[m];
+			data_merged[k] = data2[m];
+			++j;
+		}
+		++k;
+	}
+
+	while (i < n1) {
+		hashes_merged[k] = hashes1[i];
+		volumes_merged[k] = volumes1[i];
+		data_merged[k] = data1[i];
+		++i;
+		++k;
+	}
+
+	while (j < n2) {
+		hashes_merged[k] = GetTag(hashes2[j]);
+		int m = GetTag(hashes2[j]);
+		volumes_merged[k] = volumes2[m];
+		data_merged[k] = data2[m];
+		++j;
+		++k;
+	}
+
+	assert(hashes_are_sorted(hashes_merged, n1 + n2));
+}
+
+
+void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
+	struct GeoBoundingBox *volumes, void **data)
+{
+	bvh->bbox = find_enclosing_box(bvh->bbox, n, volumes);
+	uint64_t *new_hashes;
+	new_hashes = malloc(n * sizeof(*new_hashes));
+	ComputeHashes(&bvh->bbox, volumes, n, new_hashes);
+	int level_begin[GEO_HASHED_BVH_MAX_DEPTH + 1];
+	level_begin[0] = 0;
+	// TODO: This could be optimized by recursively partitioning
+	// the hashes.
+	for (int i = 0; i < GEO_HASHED_BVH_MAX_DEPTH; ++i) {
+		level_begin[i + 1] = level_partition(i,
+			new_hashes, level_begin[i], n);
+	}
+	for (int i = 0; i < GEO_HASHED_BVH_MAX_DEPTH; ++i) {
+		GeoQsort(new_hashes + level_begin[i],
+			 level_begin[i + 1] - level_begin[i]);
+	}
+	struct GeoHashedBvh merged_bvh;
+	GeoHBInitialize(&merged_bvh, bvh->bbox);
+	reserve_space(&merged_bvh,
+		bvh->size + level_begin[GEO_HASHED_BVH_MAX_DEPTH]);
+	for (int i = 0; i < GEO_HASHED_BVH_MAX_DEPTH; ++i) {
+		merge_level(&merged_bvh, bvh, i, level_begin,
+			new_hashes, volumes, data);
+	}
+
+	GeoHBDestroy(bvh);
+	*bvh = merged_bvh;
+	free(new_hashes);
 }
 
