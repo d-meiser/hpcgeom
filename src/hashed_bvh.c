@@ -179,9 +179,13 @@ void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 	struct GeoBoundingBox *volumes, void **data)
 {
 	bvh->bbox = find_enclosing_box(bvh->bbox, n, volumes);
+
+	// Compute hashes
 	uint64_t *new_hashes;
 	new_hashes = malloc(n * sizeof(*new_hashes));
 	ComputeHashes(&bvh->bbox, volumes, n, new_hashes);
+
+	// Partition into levels
 	int level_begin[GEO_HASHED_BVH_MAX_DEPTH + 1];
 	level_begin[0] = 0;
 	// TODO: This could be optimized by recursively partitioning
@@ -190,10 +194,14 @@ void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 		level_begin[i + 1] = level_partition(i,
 			new_hashes, level_begin[i], n);
 	}
+
+	// Sort each level
 	for (int i = 0; i < GEO_HASHED_BVH_MAX_DEPTH; ++i) {
 		GeoQsort(new_hashes + level_begin[i],
 			 level_begin[i + 1] - level_begin[i]);
 	}
+
+	// Merge the sorted levels
 	struct GeoHashedBvh merged_bvh;
 	GeoHBInitialize(&merged_bvh, bvh->bbox);
 	reserve_space(&merged_bvh,
@@ -203,6 +211,7 @@ void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 			new_hashes, volumes, data);
 	}
 
+	// Swap data into bvh and cleanup
 	GeoHBDestroy(bvh);
 	*bvh = merged_bvh;
 	free(new_hashes);
