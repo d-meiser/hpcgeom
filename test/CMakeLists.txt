@@ -11,6 +11,7 @@ set_target_properties(test_utilities
 
 set(TESTS
 	edge_array
+	hashed_bvh
 	hashed_octree
 	spatial_hash
 	vertex_array
