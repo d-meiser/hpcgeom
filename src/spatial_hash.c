@@ -9,17 +9,22 @@
 #define BITS_PER_DIM 10
 #define NUM_LEAF_BUCKETS (1u << BITS_PER_DIM)
 
+static double clamp(double x, double min, double max)
+{
+	assert(max >= min);
+	x = (x > min) ? x : min;
+	x = (x < max) ? x : max;
+	return x;
+}
+
 static GeoSpatialHash ComputeBucket(double min, double max,
 	double pos, GeoSpatialHash num_buckets)
 {
 	assert(max > min);
-	double folded_pos = fmod(pos - min, max - min);
-	if (folded_pos < 0) {
-		folded_pos += max - min;
-	}
-	int bucket = num_buckets * folded_pos / (max - min);
-	assert(bucket >= 0);
-	assert((uint32_t)bucket < num_buckets);
+	pos = clamp(pos, min, max);
+	uint32_t bucket = num_buckets * (pos - min) / (max - min);
+	if (bucket == num_buckets) --bucket;
+	assert(bucket < num_buckets);
 	return bucket;
 }
 
