@@ -84,7 +84,7 @@ static int level_partition(int max_level, uint64_t *hashes, int l, int h)
 	while (1) {
 		while (l < h && GeoNodeLevel(GetHash(hashes[l])) <=  max_level) ++l;
 		while (h > l && GeoNodeLevel(GetHash(hashes[h - 1])) > max_level) --h;
-		if (l != h) {
+		if (l < h) {
 			uint64_t tmp = hashes[l];
 			hashes[l] = hashes[h];
 			hashes[h] = tmp;
@@ -145,8 +145,8 @@ static void merge_level(
 			data_merged[k] = data1[i];
 			++i;
 		} else {
-			hashes_merged[k] = GetTag(hashes2[j]);
-			int m = GetTag(hashes2[j]);
+			hashes_merged[k] = GetHash(hashes2[j]);
+			uint32_t m = GetTag(hashes2[j]);
 			volumes_merged[k] = volumes2[m];
 			data_merged[k] = data2[m];
 			++j;
@@ -163,8 +163,8 @@ static void merge_level(
 	}
 
 	while (j < n2) {
-		hashes_merged[k] = GetTag(hashes2[j]);
-		int m = GetTag(hashes2[j]);
+		hashes_merged[k] = GetHash(hashes2[j]);
+		uint32_t m = GetTag(hashes2[j]);
 		volumes_merged[k] = volumes2[m];
 		data_merged[k] = data2[m];
 		++j;
@@ -277,6 +277,7 @@ static int visit_node(
 		int cont = visitor(bvh->volumes, bvh->data, i, ctx);
 		if (cont == 0) return 0;
 	}
+	if (level == GEO_HASHED_BVH_MAX_DEPTH) return 1;
 
 	// Visit children
 	GeoNodeKey children[8];
