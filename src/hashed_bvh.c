@@ -2,8 +2,12 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <qsort.h>
 #include <spatial_hash.h>
+
+
+static uint64_t nodes_visited = 0ull;
 
 
 static void reserve_space(struct GeoHashedBvh *bvh, int capacity)
@@ -197,6 +201,7 @@ void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 		level_begin[i + 1] = level_partition(i,
 			new_hashes, level_begin[i], n);
 	}
+	assert(level_begin[GEO_HASHED_BVH_MAX_DEPTH] == n);
 
 	// Sort each level
 	for (int i = 0; i < GEO_HASHED_BVH_MAX_DEPTH; ++i) {
@@ -212,6 +217,12 @@ void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 	for (int i = 0; i < GEO_HASHED_BVH_MAX_DEPTH; ++i) {
 		merge_level(&merged_bvh, bvh, i, level_begin,
 			new_hashes, volumes, data);
+	}
+
+	// Update the level pointers
+	for (int i = 0; i < GEO_HASHED_BVH_MAX_DEPTH + 1; ++i) {
+		merged_bvh.level_begin[i] +=
+			bvh->level_begin[i] + level_begin[i];
 	}
 
 	// Swap data into bvh and cleanup
@@ -270,6 +281,7 @@ static int visit_node(
 	GeoVolumeVisitor visitor,
 	void *ctx)
 {
+	++nodes_visited;
 	// Visit own volumes
 	GeoSpatialHash begin = GeoNodeBegin(node);
 	GeoSpatialHash end = GeoNodeEnd(node);
@@ -278,10 +290,14 @@ static int visit_node(
 	int l = lower_bound(bvh->hashes + bvh->level_begin[level], n, begin);
 	int h = upper_bound(bvh->hashes + bvh->level_begin[level], n, end);
 	for (int i = l; i < h; ++i) {
-		int cont = visitor(bvh->volumes, bvh->data, i, ctx);
-		if (cont == 0) return 0;
+		printf(".");
+		if (boxes_overlap(&bvh->volumes[i], volume)) {
+			printf("x");
+			int cont = visitor(bvh->volumes, bvh->data, i, ctx);
+			if (cont == 0) return 0;
+		}
 	}
-	if (level == GEO_HASHED_BVH_MAX_DEPTH) return 1;
+	if (level == GEO_HASHED_BVH_MAX_DEPTH - 1) return 1;
 
 	// Visit children
 	GeoNodeKey children[8];
@@ -298,14 +314,14 @@ static int visit_node(
 	return 1;
 }
 
+
 void GeoHBVisitIntersectingVolumes(struct GeoHashedBvh *bvh,
 	const struct GeoBoundingBox *volume,
 	GeoVolumeVisitor visitor,
 	void *ctx)
 {
-	GeoNodeKey node = GeoNodeSmallestContaining(&bvh->bbox, volume);
-	struct GeoBoundingBox node_box = GeoNodeBox(node, &bvh->bbox);
-	visit_node(node, &node_box, bvh, volume, visitor, ctx);
+	visit_node(GeoNodeRoot(), &bvh->bbox, bvh, volume, visitor, ctx);
+	printf("\nnodes_visited == %lu\n", nodes_visited);
 }
 
 
