@@ -1,6 +1,7 @@
 add_library(hpcgeo
 	basic_types.c
 	edge_array.c
+	edge_set.c
 	hash_table.cpp
 	hashed_bvh.c
 	hashed_octree.c
