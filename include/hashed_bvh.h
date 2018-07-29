@@ -18,7 +18,6 @@ struct GeoHashedBvh {
 	struct GeoBoundingBox *volumes;
 	void **data;
 	GeoNodeKey *hashes;
-	int size;
 	int capacity;
 	int level_begin[GEO_HASHED_BVH_MAX_DEPTH + 1];
 	struct GeoBoundingBox bbox;

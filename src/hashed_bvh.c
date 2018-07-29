@@ -115,7 +115,7 @@ static void merge(
 	struct GeoBoundingBox *volumes,
 	void **data)
 {
-	int n1 = bvh->size;
+	int n1 = bvh->level_begin[GEO_HASHED_BVH_MAX_DEPTH];
 	int n2 = n;
 
 	const GeoNodeKey *hashes1 = bvh->hashes;
@@ -243,7 +243,8 @@ void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 	// Merge the sorted hashes
 	struct GeoHashedBvh merged_bvh;
 	GeoHBInitialize(&merged_bvh, bvh->bbox);
-	reserve_space(&merged_bvh, bvh->size + n);
+	reserve_space(&merged_bvh,
+		bvh->level_begin[GEO_HASHED_BVH_MAX_DEPTH] + n);
 	merged_bvh.root = bvh->root;
 	bvh->root = 0;
 	merge(&merged_bvh, bvh, n, new_hashes, volumes, data);
