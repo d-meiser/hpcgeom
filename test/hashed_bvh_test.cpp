@@ -37,7 +37,6 @@ int CountTraversedNodes(struct GeoBoundingBox *volumes, void **data, int i,
   struct CountIntersectingVolumesCtx* count_ctx =
       static_cast<CountIntersectingVolumesCtx*>(ctx);
   ++count_ctx->count;
-  std::cout << "." << std::endl;
   return 1;
 }
 
@@ -74,7 +73,21 @@ TEST_F(HashedBvh, VisitAnIntersectingVolume) {
       &bvh, &volume, CountTraversedNodes, &ctx);
   EXPECT_EQ(1, ctx.count);
 }
-/*
+
+TEST_F(HashedBvh, VisitThreeIntersectingVolume) {
+  int n = 3;
+  struct GeoBoundingBox volume = bvh.bbox;
+  scale_bbox(&volume, 1.0e-6);
+  std::vector<struct GeoBoundingBox> volumes(n, volume);
+  std::vector<void*> data(n, nullptr);
+  GeoHBInsert(&bvh, n, &volumes[0], &data[0]);
+  struct CountIntersectingVolumesCtx ctx;
+  ctx.count = 0;
+  GeoHBVisitIntersectingVolumes(
+      &bvh, &volume, CountTraversedNodes, &ctx);
+  EXPECT_EQ(3, ctx.count);
+}
+
 TEST_F(HashedBvh, VisitSmallVolumeIntersection) {
   int n = 10;
   std::vector<struct GeoBoundingBox> volumes(n,
@@ -92,6 +105,7 @@ TEST_F(HashedBvh, VisitSmallVolumeIntersection) {
       GeoHBVisitIntersectingVolumes(
           &bvh, &v, CountTraversedNodes, &ctx));
 }
+/*
 
 TEST_F(HashedBvh, VisitMediumVolumeIntersection) {
   int n = 10;

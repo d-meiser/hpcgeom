@@ -2,7 +2,6 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <qsort.h>
 #include <spatial_hash.h>
 
@@ -290,9 +289,7 @@ static int visit_node(
 	int l = lower_bound(bvh->hashes + bvh->level_begin[level], n, begin);
 	int h = upper_bound(bvh->hashes + bvh->level_begin[level], n, end);
 	for (int i = l; i < h; ++i) {
-		printf(".");
 		if (boxes_overlap(&bvh->volumes[i], volume)) {
-			printf("x");
 			int cont = visitor(bvh->volumes, bvh->data, i, ctx);
 			if (cont == 0) return 0;
 		}
@@ -321,7 +318,6 @@ void GeoHBVisitIntersectingVolumes(struct GeoHashedBvh *bvh,
 	void *ctx)
 {
 	visit_node(GeoNodeRoot(), &bvh->bbox, bvh, volume, visitor, ctx);
-	printf("\nnodes_visited == %lu\n", nodes_visited);
 }
 
 
