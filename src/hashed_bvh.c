@@ -81,16 +81,20 @@ static void ComputeHashes(const struct GeoBoundingBox *b,
 
 static int level_partition(int max_level, uint64_t *hashes, int l, int h)
 {
-	while (1) {
-		while (l < h && GeoNodeLevel(GetHash(hashes[l])) <=  max_level) ++l;
-		while (h > l && GeoNodeLevel(GetHash(hashes[h - 1])) > max_level) --h;
-		if (l < h) {
-			uint64_t tmp = hashes[l];
-			hashes[l] = hashes[h];
-			hashes[h] = tmp;
-		} else {
-			break;
+	assert(h >= l);
+	while (l != h) {
+		while (GeoNodeLevel(GetHash(hashes[l])) <= max_level) {
+			++l;
+			if (l == h) return l;
 		}
+		do {
+			--h;
+			if (l == h) return l;
+		} while (GeoNodeLevel(GetHash(hashes[h])) > max_level);
+		uint64_t tmp = hashes[l];
+		hashes[l] = hashes[h];
+		hashes[h] = tmp;
+		++l;
 	}
 	return l;
 }
