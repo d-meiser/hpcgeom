@@ -244,6 +244,8 @@ void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 	struct GeoHashedBvh merged_bvh;
 	GeoHBInitialize(&merged_bvh, bvh->bbox);
 	reserve_space(&merged_bvh, bvh->size + n);
+	merged_bvh.root = bvh->root;
+	bvh->root = 0;
 	merge(&merged_bvh, bvh, n, new_hashes, volumes, data);
 
 	// Update the level pointers
