@@ -298,7 +298,9 @@ void GeoHBVisitIntersectingVolumes(struct GeoHashedBvh *bvh,
 	GeoVolumeVisitor visitor,
 	void *ctx)
 {
-	visit_node(GeoNodeRoot(), &bvh->bbox, bvh, volume, visitor, ctx);
+	GeoNodeKey node = GeoNodeSmallestContaining(&bvh->bbox, volume);
+	struct GeoBoundingBox node_box = GeoNodeBox(node, &bvh->bbox);
+	visit_node(node, &node_box, bvh, volume, visitor, ctx);
 }
 
 
