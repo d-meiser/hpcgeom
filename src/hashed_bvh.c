@@ -340,12 +340,16 @@ static int boxes_overlap(
 
 static int visit_node(
 	GeoNodeKey node,
+	struct GeoHashedBvhNode *tree_node,
 	const struct GeoBoundingBox *my_bbox,
 	struct GeoHashedBvh *bvh,
 	const struct GeoBoundingBox *volume,
 	GeoVolumeVisitor visitor,
 	void *ctx)
 {
+	// Bail early if the subtree starting at this node is empty
+	if (!tree_node || tree_node->size == 0) return 1;
+
 	// Visit own volumes
 	GeoSpatialHash begin = GeoNodeBegin(node);
 	GeoSpatialHash end = GeoNodeEnd(node);
@@ -368,7 +372,9 @@ static int visit_node(
 	GeoComputeChildBoxes(my_bbox, child_boxes);
 	for (int i = 0; i < 8; ++i) {
 		if (boxes_overlap(&child_boxes[i], volume)) {
-			int cont = visit_node(children[i], &child_boxes[i],
+			int cont = visit_node(
+				children[i], tree_node->child[i],
+				&child_boxes[i],
 				bvh, volume, visitor, ctx);
 			if (cont == 0) return 0;
 		}
@@ -382,7 +388,8 @@ void GeoHBVisitIntersectingVolumes(struct GeoHashedBvh *bvh,
 	GeoVolumeVisitor visitor,
 	void *ctx)
 {
-	visit_node(GeoNodeRoot(), &bvh->bbox, bvh, volume, visitor, ctx);
+	visit_node(GeoNodeRoot(), bvh->root, &bvh->bbox, bvh, volume, visitor,
+		ctx);
 }
 
 
