@@ -6,6 +6,40 @@
 #include <spatial_hash.h>
 
 
+struct GeoHashedBvhNode {
+	int size;
+	struct GeoHashedBvhNode *child[8];
+};
+
+
+static void GeoHBNInitialize(struct GeoHashedBvhNode *node)
+{
+	memset(node, 0, sizeof(*node));
+}
+
+static void GeoHBNDestroy(struct GeoHashedBvhNode *node)
+{
+	if (0 == node) return;
+	for (int i = 0; i < 8; ++i) {
+		struct GeoHashedBvhNode *child = node->child[i];
+		GeoHBNDestroy(child);
+		free(child);
+	}
+}
+
+static struct GeoHashedBvhNode *GeoHBNNew()
+{
+	struct GeoHashedBvhNode *node = malloc(sizeof(*node));
+	GeoHBNInitialize(node);
+	return node;
+}
+
+static void GeoHBNDelete(struct GeoHashedBvhNode *node)
+{
+	GeoHBNDestroy(node);
+	free(node);
+}
+
 static void reserve_space(struct GeoHashedBvh *bvh, int capacity)
 {
 	if (capacity > bvh->capacity) {
@@ -29,6 +63,7 @@ void GeoHBInitialize(struct GeoHashedBvh *bvh, struct GeoBoundingBox bbox)
 
 void GeoHBDestroy(struct GeoHashedBvh *bvh)
 {
+	GeoHBNDelete(bvh->root);
 	free(bvh->volumes);
 	free(bvh->data);
 	free(bvh->hashes);
@@ -178,6 +213,37 @@ static void merge_level(
 	assert(hashes_are_sorted(hashes_merged, n1 + n2));
 }
 
+static void reset_sizes(struct GeoHashedBvhNode *node)
+{
+	node->size = 0;
+	for (int i = 0; i < 8; ++i) {
+		struct GeoHashedBvhNode *child = node->child[i];
+		if (child) reset_sizes(child);
+	}
+}
+
+static void add_entity(struct GeoHashedBvhNode **node, int level,
+	GeoSpatialHash hash)
+{
+	if (0 == *node) *node = GeoHBNNew();
+	++(*node)->size;
+	if (level > 0) {
+		int i = (hash >> (3 * level)) & 0x7;
+		add_entity(&(*node)->child[i], level - 1, hash);
+	}
+}
+
+static void recompute_sizes(struct GeoHashedBvh *bvh)
+{
+	if (bvh->root) {
+		reset_sizes(bvh->root);
+	}
+	for (int i = 0; i < bvh->level_begin[GEO_HASHED_BVH_MAX_DEPTH]; ++i) {
+		GeoSpatialHash hash = bvh->hashes[i];
+		add_entity(&bvh->root, GeoNodeLevel(hash), hash);
+	}
+}
+
 void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 	struct GeoBoundingBox *volumes, void **data)
 {
@@ -225,6 +291,9 @@ void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 	GeoHBDestroy(bvh);
 	*bvh = merged_bvh;
 	free(new_hashes);
+
+	// Update the size information
+	recompute_sizes(bvh);
 }
 
 static uint32_t lower_bound(uint32_t* arr, uint32_t n, uint32_t x)
