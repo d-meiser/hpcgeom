@@ -109,7 +109,7 @@ static void ComputeHashes(const struct GeoBoundingBox *b,
 	uint64_t *hashes)
 {
 	for (int i = 0; i < n; ++i) {
-		GeoSpatialHash hash = GeoNodeSmallestContaining(b, &boxes[i]);
+		GeoNodeKey hash = GeoNodeSmallestContaining(b, &boxes[i]);
 		hashes[i] = BigHash(hash, i);
 	}
 }
@@ -135,7 +135,7 @@ static int level_partition(int max_level, uint64_t *hashes, int l, int h)
 }
 
 #ifndef NDEBUG
-static int hashes_are_sorted(GeoSpatialHash *h, int n)
+static int hashes_are_sorted(GeoNodeKey *h, int n)
 {
 	for (int i = 0; i < n - 1; ++i) {
 		if (h[i] > h[i + 1]) return 0;
@@ -156,10 +156,10 @@ static void merge_level(
 	int n1 = bvh->level_begin[level + 1] - bvh->level_begin[level];
 	int n2 = level_begin[level + 1] - level_begin[level];
 
-	const GeoSpatialHash *hashes1 =
+	const GeoNodeKey *hashes1 =
 		bvh->hashes + bvh->level_begin[level];
 	const uint64_t *hashes2 = hashes + level_begin[level];
-	GeoSpatialHash *hashes_merged = merged_bvh->hashes +
+	GeoNodeKey *hashes_merged = merged_bvh->hashes +
 		bvh->level_begin[level] + level_begin[level];
 
 	struct GeoBoundingBox *volumes1 =
@@ -223,7 +223,7 @@ static void reset_sizes(struct GeoHashedBvhNode *node)
 }
 
 static void add_entity(struct GeoHashedBvhNode **node, int level,
-	GeoSpatialHash hash)
+	GeoNodeKey hash)
 {
 	if (0 == *node) *node = GeoHBNNew();
 	++(*node)->size;
@@ -239,7 +239,7 @@ static void recompute_sizes(struct GeoHashedBvh *bvh)
 		reset_sizes(bvh->root);
 	}
 	for (int i = 0; i < bvh->level_begin[GEO_HASHED_BVH_MAX_DEPTH]; ++i) {
-		GeoSpatialHash hash = bvh->hashes[i];
+		GeoNodeKey hash = bvh->hashes[i];
 		add_entity(&bvh->root, GeoNodeLevel(hash), hash);
 	}
 }
@@ -351,9 +351,11 @@ static int visit_node(
 	if (!tree_node || tree_node->size == 0) return 1;
 
 	// Visit own volumes
-	GeoSpatialHash begin = GeoNodeBegin(node);
-	GeoSpatialHash end = GeoNodeEnd(node);
+	GeoNodeKey begin = GeoNodeBegin(node);
+	GeoNodeKey end = GeoNodeEnd(node);
 	int level = GeoNodeLevel(node);
+	begin |= (0x1u << (3 * level));
+	end |= (0x1u << (3 * level));
 	int n = bvh->level_begin[level + 1] - bvh->level_begin[level];
 	int l = lower_bound(bvh->hashes + bvh->level_begin[level], n, begin);
 	int h = upper_bound(bvh->hashes + bvh->level_begin[level], n, end);
