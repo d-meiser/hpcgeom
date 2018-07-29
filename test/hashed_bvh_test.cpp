@@ -95,10 +95,9 @@ TEST_F(HashedBvh, CanInsertVolumesMultipleTimes) {
   std::vector<struct GeoBoundingBox> volumes(n, volume);
   std::vector<void*> data(n, nullptr);
   GeoHBInsert(&bvh, n, &volumes[0], &data[0]);
+  GeoHBInsert(&bvh, n, &volumes[0], &data[0]);
   struct CountIntersectingVolumesCtx ctx;
   ctx.count = 0;
-  GeoHBVisitIntersectingVolumes(
-      &bvh, &volume, CountTraversedNodes, &ctx);
   GeoHBVisitIntersectingVolumes(
       &bvh, &volume, CountTraversedNodes, &ctx);
   EXPECT_EQ(6, ctx.count);
