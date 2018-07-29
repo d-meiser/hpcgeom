@@ -105,7 +105,6 @@ TEST_F(HashedBvh, VisitSmallVolumeIntersection) {
       GeoHBVisitIntersectingVolumes(
           &bvh, &v, CountTraversedNodes, &ctx));
 }
-/*
 
 TEST_F(HashedBvh, VisitMediumVolumeIntersection) {
   int n = 10;
@@ -142,4 +141,3 @@ TEST_F(HashedBvh, VisitLargeVolumeIntersection) {
       GeoHBVisitIntersectingVolumes(
           &bvh, &v, CountTraversedNodes, &ctx));
 }
-*/

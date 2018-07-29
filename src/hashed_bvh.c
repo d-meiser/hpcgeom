@@ -6,9 +6,6 @@
 #include <spatial_hash.h>
 
 
-static uint64_t nodes_visited = 0ull;
-
-
 static void reserve_space(struct GeoHashedBvh *bvh, int capacity)
 {
 	if (capacity > bvh->capacity) {
@@ -280,7 +277,6 @@ static int visit_node(
 	GeoVolumeVisitor visitor,
 	void *ctx)
 {
-	++nodes_visited;
 	// Visit own volumes
 	GeoSpatialHash begin = GeoNodeBegin(node);
 	GeoSpatialHash end = GeoNodeEnd(node);
