@@ -11,6 +11,7 @@ extern "C" {
 
 #define GEO_HASHED_BVH_MAX_DEPTH 10
 
+
 struct GeoHashedBvh {
 	struct GeoBoundingBox *volumes;
 	void **data;

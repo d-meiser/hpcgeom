@@ -174,7 +174,6 @@ static void merge_level(
 	assert(hashes_are_sorted(hashes_merged, n1 + n2));
 }
 
-
 void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 	struct GeoBoundingBox *volumes, void **data)
 {
@@ -216,4 +215,90 @@ void GeoHBInsert(struct GeoHashedBvh *bvh, int n,
 	*bvh = merged_bvh;
 	free(new_hashes);
 }
+
+static uint32_t lower_bound(uint32_t* arr, uint32_t n, uint32_t x)
+{
+	uint32_t l = 0;
+	uint32_t h = n;
+	while (l < h) {
+		uint32_t mid = (l + h) / 2;
+		if (x <= arr[mid]) {
+			h = mid;
+		} else {
+			l = mid + 1;
+		}
+	}
+	return l;
+}
+
+static uint32_t upper_bound(uint32_t* arr, uint32_t n, uint32_t x)
+{
+	uint32_t l = 0;
+	uint32_t h = n;
+	while (l < h) {
+		uint32_t mid = (l + h) / 2;
+		if (x >= arr[mid]) {
+			l = mid + 1;
+		} else {
+			h = mid;
+		}
+	}
+	return l;
+}
+
+static int boxes_overlap(
+	const struct GeoBoundingBox* a, const struct GeoBoundingBox* b)
+{
+	if (a->max.x >= b->min.x && b->max.x >= a->min.x &&
+	    a->max.y >= b->min.y && b->max.y >= a->min.y &&
+	    a->max.z >= b->min.z && b->max.z >= a->min.z) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+static int visit_node(
+	GeoNodeKey node,
+	const struct GeoBoundingBox *my_bbox,
+	struct GeoHashedBvh *bvh,
+	const struct GeoBoundingBox *volume,
+	GeoVolumeVisitor visitor,
+	void *ctx)
+{
+	// Visit own volumes
+	GeoSpatialHash begin = GeoNodeBegin(node);
+	GeoSpatialHash end = GeoNodeEnd(node);
+	int level = GeoNodeLevel(node);
+	int n = bvh->level_begin[level + 1] - bvh->level_begin[level];
+	int l = lower_bound(bvh->hashes + bvh->level_begin[level], n, begin);
+	int h = upper_bound(bvh->hashes + bvh->level_begin[level], n, end);
+	for (int i = l; i < h; ++i) {
+		int cont = visitor(bvh->volumes, bvh->data, i, ctx);
+		if (cont == 0) return 0;
+	}
+
+	// Visit children
+	GeoNodeKey children[8];
+	GeoNodeComputeChildKeys(node, children);
+	struct GeoBoundingBox child_boxes[8];
+	GeoComputeChildBoxes(my_bbox, child_boxes);
+	for (int i = 0; i < 8; ++i) {
+		if (boxes_overlap(&child_boxes[i], volume)) {
+			int cont = visit_node(children[i], &child_boxes[i],
+				bvh, volume, visitor, ctx);
+			if (cont == 0) return 0;
+		}
+	}
+	return 1;
+}
+
+void GeoHBVisitIntersectingVolumes(struct GeoHashedBvh *bvh,
+	const struct GeoBoundingBox *volume,
+	GeoVolumeVisitor visitor,
+	void *ctx)
+{
+	visit_node(GeoNodeRoot(), &bvh->bbox, bvh, volume, visitor, ctx);
+}
+
 
