@@ -1,24 +1,25 @@
 #include <edge_set.h>
 #include <string.h>
+#include <stdlib.h>
 
 
-void GeoESInitialize(struct GeoEdgeSet *es,
-	struct GeoVertexSet *vs)
+void GeoESInitialize(struct GeoEdgeSet *es)
 {
 	memset(es, 0, sizeof(*es));
-	es->vs = vs;
+	es->capacity = 16;
+	es->edges = malloc(es->capacity * sizeof(*es->edges));
+	GeoHTInitialize(&es->id_map);
 }
 
 void GeoESDestroy(struct GeoEdgeSet *es)
 {
-	(void)(es);
+	free(es->edges);
+	GeoHTDestroy(&es->id_map);
 }
 
-void GeoESInsert(struct GeoEdgeSet *es, struct GeoPoint p1, struct GeoPoint p2,
-	GeoEdgeId *id)
+GeoEdgeId GeoESInsert(struct GeoEdgeSet *es, struct GeoEdge edge)
 {
 	(void)es;
-	(void)p1;
-	(void)p2;
-	*id = 0x0ul;
+	(void)edge;
+	return 0x0u;
 }

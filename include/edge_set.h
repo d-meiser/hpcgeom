@@ -3,6 +3,7 @@
 
 #include <geo_export.h>
 #include <basic_types.h>
+#include <hash_table.h>
 
 
 #ifdef __cplusplus
@@ -10,18 +11,18 @@ extern "C" {
 #endif
 
 struct GeoVertexSet;
-struct GeoHashedBvh;
 
 struct GeoEdgeSet {
-	struct GeoVertexSet *vs;
-	struct GeoHashedBvh *bvh;
+	struct GeoEdge *edges;
+	int size;
+	int capacity;
+	GeoEdgeId next_id;
+	struct GeoHashTable id_map;
 };
 
-GEO_EXPORT void GeoESInitialize(struct GeoEdgeSet *es,
-	struct GeoVertexSet *vs);
+GEO_EXPORT void GeoESInitialize(struct GeoEdgeSet *es);
 GEO_EXPORT void GeoESDestroy(struct GeoEdgeSet *es);
-GEO_EXPORT void GeoESInsert(struct GeoEdgeSet *es,
-	struct GeoPoint p1, struct GeoPoint p2, GeoEdgeId *id);
+GEO_EXPORT GeoEdgeId GeoESInsert(struct GeoEdgeSet *es, struct GeoEdge edge);
 
 #ifdef __cplusplus
 }
