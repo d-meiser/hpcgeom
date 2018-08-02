@@ -58,8 +58,8 @@ TEST_F(EdgeSet, CanInsertManyEdges) {
     }
   }
   for (int i = 0; i < num_edges; ++i) {
-    EXPECT_NE(static_cast<struct GeoEdge*>(0x0),
-              GeoESGetEdge(&edge_set, edges[i])) << i;
+    struct GeoEdge *edge = GeoESGetEdge(&edge_set, edges[i]);
+    EXPECT_NE(static_cast<struct GeoEdge*>(0x0), edge) << i;
   }
 }
 

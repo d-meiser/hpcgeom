@@ -1,6 +1,7 @@
 #include <edge_set.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 
 #define SHORT_LIST_CAPACITY 64
@@ -86,7 +87,7 @@ void merge(struct GeoEdge *e1, int n1, struct GeoEdge *e2, int n2)
 	--k;
 	--n1;
 	--n2;
-	while (n1 > 0 && n2 > 0) {
+	while (n1 >= 0 && n2 >= 0) {
 		if (compute_edge_id(e1[n1]) > compute_edge_id(e2[n2])) {
 			e1[k] = e1[n1];
 			--n1;
@@ -96,14 +97,19 @@ void merge(struct GeoEdge *e1, int n1, struct GeoEdge *e2, int n2)
 		}
 		--k;
 	}
-	while (n1 > 0) {
+	while (n1 >= 0) {
 		e1[k] = e1[n1];
 		--n1;
+		--k;
 	}
-	while (n2 > 0) {
+	while (n2 >= 0) {
 		e1[k] = e2[n2];
 		--n2;
+		--k;
 	}
+	assert(k == -1);
+	assert(n1 == -1);
+	assert(n2 == -1);
 }
 
 static void flush_short_list(struct GeoEdge *short_list,
@@ -164,7 +170,7 @@ struct GeoEdge *GeoESGetEdge(struct GeoEdgeSet *es, GeoEdgeId id)
 {
 	int i = lower_bound(es->large_list, es->size, id);
 	if (i != es->size) return &es->large_list[i];
-	for (i = 0; i < SHORT_LIST_CAPACITY && is_end(es->short_list[i]); ++i) {
+	for (i = 0; i < SHORT_LIST_CAPACITY && !is_end(es->short_list[i]); ++i) {
 		if (id == compute_edge_id(es->short_list[i])) {
 			return &es->short_list[i];
 		}
