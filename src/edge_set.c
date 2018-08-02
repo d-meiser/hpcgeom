@@ -164,7 +164,7 @@ struct GeoEdge *GeoESGetEdge(struct GeoEdgeSet *es, GeoEdgeId id)
 {
 	int i = lower_bound(es->large_list, es->size, id);
 	if (i != es->size) return &es->large_list[i];
-	for (i = 0; is_end(es->short_list[i]) && i < SHORT_LIST_CAPACITY; ++i) {
+	for (i = 0; i < SHORT_LIST_CAPACITY && is_end(es->short_list[i]); ++i) {
 		if (id == compute_edge_id(es->short_list[i])) {
 			return &es->short_list[i];
 		}
