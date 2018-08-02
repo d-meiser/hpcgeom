@@ -46,4 +46,20 @@ TEST_F(EdgeSet, InsertingDifferentEdgesGivesDistinctIds) {
   EXPECT_NE(my_edge1, my_edge2);
 }
 
+TEST_F(EdgeSet, CanInsertManyEdges) {
+  const int num_edges = 100;
+  std::vector<GeoEdgeId> edges(num_edges);
+  for (int i = 0; i < num_edges; ++i) {
+    edges[i] = GeoESInsert(&edge_set, {{(GeoVertexId)i, (GeoVertexId)(i + 1)}});
+  }
+  for (int i = 0; i < num_edges; ++i) {
+    for (int j = 0; j < i; ++j) {
+      EXPECT_NE(edges[i], edges[j]);
+    }
+  }
+  for (int i = 0; i < num_edges; ++i) {
+    EXPECT_TRUE(GeoESHaveEdge(&edge_set, edges[i]));
+  }
+}
+
 
