@@ -58,7 +58,7 @@ TEST_F(EdgeSet, CanInsertManyEdges) {
     }
   }
   for (int i = 0; i < num_edges; ++i) {
-    EXPECT_TRUE(GeoESHaveEdge(&edge_set, edges[i]));
+    EXPECT_TRUE(GeoESGetEdge(&edge_set, edges[i]));
   }
 }
 

@@ -21,7 +21,7 @@ struct GeoEdgeSet {
 GEO_EXPORT void GeoESInitialize(struct GeoEdgeSet *es);
 GEO_EXPORT void GeoESDestroy(struct GeoEdgeSet *es);
 GEO_EXPORT GeoEdgeId GeoESInsert(struct GeoEdgeSet *es, struct GeoEdge edge);
-GEO_EXPORT int GeoESHaveEdge(struct GeoEdgeSet *es, GeoEdgeId id);
+GEO_EXPORT struct GeoEdge *GeoESGetEdge(struct GeoEdgeSet *es, GeoEdgeId id);
 
 #ifdef __cplusplus
 }

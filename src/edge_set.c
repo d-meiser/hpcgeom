@@ -160,12 +160,14 @@ static int lower_bound(const struct GeoEdge *edge, int n, GeoEdgeId x)
 	return l;
 }
 
-int GeoESHaveEdge(struct GeoEdgeSet *es, GeoEdgeId id)
+struct GeoEdge *GeoESGetEdge(struct GeoEdgeSet *es, GeoEdgeId id)
 {
 	int i = lower_bound(es->large_list, es->size, id);
-	if (i != es->size) return 1;
+	if (i != es->size) return &es->large_list[i];
 	for (i = 0; is_end(es->short_list[i]) && i < SHORT_LIST_CAPACITY; ++i) {
-		if (id == compute_edge_id(es->short_list[i])) return 1;
+		if (id == compute_edge_id(es->short_list[i])) {
+			return &es->short_list[i];
+		}
 	}
 	return 0;
 }
