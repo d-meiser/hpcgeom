@@ -40,7 +40,7 @@ TEST_F(EdgeSet, InsertingEdgeWithVerticesReversedGivesSameEdge) {
   EXPECT_EQ(my_edge1, my_edge2);
 }
 
-TEST_F(EdgeSet, DISABLED_WIP_InsertingDifferentEdgesGivesDistinctIds) {
+TEST_F(EdgeSet, InsertingDifferentEdgesGivesDistinctIds) {
   GeoEdgeId my_edge1 = GeoESInsert(&edge_set, {{0, 1}});
   GeoEdgeId my_edge2 = GeoESInsert(&edge_set, {{0, 2}});
   EXPECT_NE(my_edge1, my_edge2);
