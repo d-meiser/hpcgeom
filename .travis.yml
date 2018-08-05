@@ -10,6 +10,7 @@ addons:
   apt:
     packages:
     - lcov
+    - xrandr-dev
 before_install:
   - gem install coveralls-lcov
 script:

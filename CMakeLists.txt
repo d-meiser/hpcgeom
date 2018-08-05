@@ -13,6 +13,7 @@ include(GenerateExportHeader)
 add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(test)
+add_subdirectory(viewer)
 
 generate_export_header(hpcgeo BASE_NAME GEO)
 set (GEO_HAVE_FUNCTION_MULTI_DISPATH FALSE)
