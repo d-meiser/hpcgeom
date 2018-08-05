@@ -117,9 +117,17 @@ void BBoxDraw(
 {
 	(void)bbox;
 
-	mat4x4 m;
 	// Model matrix
+	mat4x4 m;
         mat4x4_identity(m);
+	mat4x4_scale_aniso(m, m,
+			   bbox->max.x - bbox->min.x,
+			   bbox->max.y - bbox->min.y,
+			   bbox->max.z - bbox->min.z);
+	mat4x4_translate_in_place(m,
+			   0.5 * (bbox->max.x + bbox->min.x),
+			   0.5 * (bbox->max.y + bbox->min.y),
+			   0.5 * (bbox->max.z + bbox->min.z));
 
 	mat4x4 mvp;
         mat4x4_mul(mvp, vp, m);
@@ -215,11 +223,11 @@ int main(void)
 		GL_SAFE_CALL(glViewport(0, 0, width, height));
 		GL_SAFE_CALL(glClear(GL_COLOR_BUFFER_BIT));
 
-		struct GeoBoundingBox bbox = {{-0.2, -0.4, 0.1}, {0.4, 0.1, 0.3}};
+		struct GeoBoundingBox bbox = {{-0.9, -0.9, -0.9}, {0.9, 0.9, 0.9}};
 
 		mat4x4 v;
 		// View
-		vec3 eye = {0.2f, 0.1f, 5.0f};
+		vec3 eye = {0.3f, 0.0f, 4.0f};
 		vec3 center = {0.0f, 0.0f, 0.0f};
 		vec3 up = {0.0f, 1.0f, 0.0f};
 		mat4x4_look_at(v, eye, center, up);
