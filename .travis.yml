@@ -12,6 +12,8 @@ addons:
     - lcov
     - xorg-dev
     - libglu1-mesa-dev
+cache:
+    apt: true
 before_install:
   - gem install coveralls-lcov
 script:
