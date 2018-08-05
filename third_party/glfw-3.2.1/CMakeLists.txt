@@ -9,6 +9,7 @@ if (NOT CMAKE_VERSION VERSION_LESS "3.0")
     # we stick with the older INSTALL_NAME_DIR mechanism
     cmake_policy(SET CMP0042 OLD)
 endif()
+cmake_policy(SET CMP0063 NEW)
 
 set(GLFW_VERSION_MAJOR "3")
 set(GLFW_VERSION_MINOR "2")
