@@ -10,6 +10,7 @@ set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
 cmake_policy(SET CMP0063 NEW)
 include(GenerateExportHeader)
 
+add_subdirectory(third_party)
 add_subdirectory(src)
 add_subdirectory(test)
 
