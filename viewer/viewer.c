@@ -194,6 +194,7 @@ int main(void)
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_SAMPLES, 8);
 
 	window = glfwCreateWindow(640, 480, "Viewer", NULL, NULL);
 
@@ -201,10 +202,18 @@ int main(void)
 		glfwTerminate();
 		exit(EXIT_FAILURE);
 	}
+
 	glfwSetKeyCallback(window, key_callback);
 	glfwMakeContextCurrent(window);
 	gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 	glfwSwapInterval(1);
+
+	GL_SAFE_CALL(glEnable(GL_LINE_SMOOTH));
+	GL_SAFE_CALL(glHint(GL_LINE_SMOOTH_HINT, GL_NICEST));
+	GL_SAFE_CALL(glEnable(GL_POINT_SMOOTH));
+	GL_SAFE_CALL(glHint(GL_POINT_SMOOTH_HINT, GL_NICEST));
+	GL_SAFE_CALL(glEnable(GL_BLEND));
+	GL_SAFE_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
 	GLuint program = create_program();
 	GL_CHECK
