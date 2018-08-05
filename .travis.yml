@@ -23,6 +23,10 @@ script:
     -DCMAKE_C_FLAGS_RELEASE='-O3 -DNDEBUG -ftree-vectorize -march=native -ffast-math' \
     -DCMAKE_CXX_FLAGS_DEBUG='-O0 -g -pg -ftest-coverage -fprofile-arcs' \
     -DCMAKE_C_FLAGS_DEBUG='-O0 -g -pg -ftest-coverage -fprofile-arcs' \
+    -DGLFW_BUILD_EXAMPLES=OFF \
+    -DGLFW_BUILD_TESTS=OFF \
+    -DGLFW_BUILD_DOCS=OFF \
+    -DGLFW_INSTALL=OFF \
     ..
   - make -j2
   - ctest --output-on-failure
