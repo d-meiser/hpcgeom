@@ -115,10 +115,13 @@ void BBoxDraw(
 	struct BBoxCtx *ctx,
 	mat4x4 vp)
 {
+	(void)bbox;
+
+	mat4x4 m;
 	// Model matrix
-        mat4x4 m, p, v, mvp, mv;
         mat4x4_identity(m);
 
+	mat4x4 mvp;
         mat4x4_mul(mvp, vp, m);
 
 	GL_SAFE_CALL(glUseProgram(ctx->shader_program));
@@ -158,11 +161,14 @@ GLuint create_program()
 
 static void error_callback(int error, const char* description)
 {
+	(void)error;
 	fprintf(stderr, "Error: %s\n", description);
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	(void)scancode;
+	(void)mods;
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
@@ -172,7 +178,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 int main(void)
 {
 	GLFWwindow* window;
-	GLint mvp_location, vpos_location, vcol_location;
 
 	glfwSetErrorCallback(error_callback);
 
