@@ -113,23 +113,13 @@ void BBoxCtxDestroy(struct BBoxCtx *ctx)
 void BBoxDraw(
 	const struct GeoBoundingBox *bbox,
 	struct BBoxCtx *ctx,
-	float ratio)
+	mat4x4 vp)
 {
 	// Model matrix
         mat4x4 m, p, v, mvp, mv;
         mat4x4_identity(m);
 
-	// View
-	vec3 eye = {0.2f, 0.1f, 5.0f};
-	vec3 center = {0.0f, 0.0f, 0.0f};
-	vec3 up = {0.0f, 1.0f, 0.0f};
-	mat4x4_look_at(v, eye, center, up);
-        mat4x4_mul(mv, v, m);
-
-	// Projection
-        mat4x4_perspective(p, 45.0f * (float)M_PI / 180.0f, ratio,
-		1.0e-2f, 10.0f);
-        mat4x4_mul(mvp, p, mv);
+        mat4x4_mul(mvp, vp, m);
 
 	GL_SAFE_CALL(glUseProgram(ctx->shader_program));
 	GL_SAFE_CALL(glUniformMatrix4fv(ctx->mvp_loc, 1, GL_FALSE,
@@ -212,7 +202,6 @@ int main(void)
 	while (!glfwWindowShouldClose(window)) {
 		float ratio;
 		int width, height;
-		mat4x4 m, p, mvp;
 
 		GL_CHECK
 		glfwGetFramebufferSize(window, &width, &height);
@@ -222,7 +211,22 @@ int main(void)
 		GL_SAFE_CALL(glClear(GL_COLOR_BUFFER_BIT));
 
 		struct GeoBoundingBox bbox = {{-0.2, -0.4, 0.1}, {0.4, 0.1, 0.3}};
-		BBoxDraw(&bbox, &bbox_ctx, ratio);
+
+		mat4x4 v;
+		// View
+		vec3 eye = {0.2f, 0.1f, 5.0f};
+		vec3 center = {0.0f, 0.0f, 0.0f};
+		vec3 up = {0.0f, 1.0f, 0.0f};
+		mat4x4_look_at(v, eye, center, up);
+
+		// Projection
+		mat4x4 p;
+		mat4x4_perspective(p, 45.0f * (float)M_PI / 180.0f, ratio,
+		1.0e-2f, 10.0f);
+
+		mat4x4 vp;
+		mat4x4_mul(vp, p, v);
+		BBoxDraw(&bbox, &bbox_ctx, vp);
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
