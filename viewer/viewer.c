@@ -22,10 +22,10 @@
 
 static const char* vertex_shader_text =
 "uniform mat4 mvp;\n"
-"attribute vec2 vpos;\n"
+"attribute vec3 vpos;\n"
 "void main()\n"
 "{\n"
-"    gl_Position = mvp * vec4(vpos, 0.0, 1.0);\n"
+"    gl_Position = mvp * vec4(vpos, 1.0);\n"
 "}\n";
 
 static const char* fragment_shader_text =
@@ -115,11 +115,21 @@ void BBoxDraw(
 	struct BBoxCtx *ctx,
 	float ratio)
 {
-        mat4x4 m, p, mvp;
+	// Model matrix
+        mat4x4 m, p, v, mvp, mv;
         mat4x4_identity(m);
-        mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-        //mat4x4_perspective(p, 1.0f, ratio, -1.f, 1.f);
-        mat4x4_mul(mvp, p, m);
+
+	// View
+	vec3 eye = {0.2f, 0.1f, 5.0f};
+	vec3 center = {0.0f, 0.0f, 0.0f};
+	vec3 up = {0.0f, 1.0f, 0.0f};
+	mat4x4_look_at(v, eye, center, up);
+        mat4x4_mul(mv, v, m);
+
+	// Projection
+        mat4x4_perspective(p, 45.0f * (float)M_PI / 180.0f, ratio,
+		1.0e-2f, 10.0f);
+        mat4x4_mul(mvp, p, mv);
 
 	GL_SAFE_CALL(glUseProgram(ctx->shader_program));
 	GL_SAFE_CALL(glUniformMatrix4fv(ctx->mvp_loc, 1, GL_FALSE,
@@ -164,6 +174,8 @@ static void error_callback(int error, const char* description)
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
 
