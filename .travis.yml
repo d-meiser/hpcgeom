@@ -10,7 +10,8 @@ addons:
   apt:
     packages:
     - lcov
-    - xrandr-dev
+    - xorg-dev
+    - libglu1-mesa-dev
 before_install:
   - gem install coveralls-lcov
 script:
