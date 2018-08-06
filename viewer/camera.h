@@ -13,8 +13,7 @@ static const uint8_t kRightStrafe = 0x1 << 3;
 
 struct Camera {
         vec3 position;
-        vec3 rotation;
-        vec3 speed;
+        vec2 rotation;
         double movement_speed_factor;
         double pitch_sensitivity;
         double yaw_sensitivity;
@@ -22,8 +21,10 @@ struct Camera {
 };
 
 void CameraInitialize(struct Camera *camera);
-void CameraHandleMouseMove(struct Camera *camera, GLFWwindow* window);
+void CameraHandleMouseMove(struct Camera *camera, GLFWwindow* window,
+	double x, double y);
 void CameraHandleKeyPress(struct Camera *camera, int key, int action);
 void CameraMove(struct Camera *camera, double dt);
+void CameraPrint(struct Camera *camera);
 
 #endif

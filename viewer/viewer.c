@@ -2,7 +2,8 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "linmath.h"
+#include <linmath.h>
+#include <camera.h>
 
 
 #include <assert.h>
@@ -42,6 +43,10 @@ struct BBoxCtx {
 	GLint col_loc;
 	GLint vpos_loc;
 };
+
+
+struct Camera camera;
+
 
 struct BBoxCtx BBoxCtxCreate(GLuint shader_program)
 {
@@ -173,7 +178,8 @@ static void error_callback(int error, const char* description)
 	fprintf(stderr, "Error: %s\n", description);
 }
 
-static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+static void key_callback(GLFWwindow* window, int key, int scancode,
+	int action, int mods)
 {
 	(void)scancode;
 	(void)mods;
@@ -181,10 +187,23 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	if (key == GLFW_KEY_Q && action == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	CameraHandleKeyPress(&camera, key, action);
+}
+
+static void cursor_position_callback(GLFWwindow* window, double x, double y)
+{
+	CameraHandleMouseMove(&camera, window, x, y);
 }
 
 int main(void)
 {
+	CameraInitialize(&camera);
+	camera.position[0] = 0.3;
+	camera.position[1] = 0.0;
+	camera.position[2] = 4.0;
+	camera.rotation[0] = 0.0;
+	camera.rotation[1] = 85.0;
+
 	GLFWwindow* window;
 
 	glfwSetErrorCallback(error_callback);
@@ -203,7 +222,9 @@ int main(void)
 		exit(EXIT_FAILURE);
 	}
 
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetKeyCallback(window, key_callback);
+	glfwSetCursorPosCallback(window, cursor_position_callback);
 	glfwMakeContextCurrent(window);
 	gladLoadGLLoader((GLADloadproc) glfwGetProcAddress);
 	glfwSwapInterval(1);
@@ -221,6 +242,7 @@ int main(void)
 	struct BBoxCtx bbox_ctx = BBoxCtxCreate(program);
 	GL_CHECK
 
+	double t = glfwGetTime();
 	while (!glfwWindowShouldClose(window)) {
 		float ratio;
 		int width, height;
@@ -234,12 +256,19 @@ int main(void)
 
 		struct GeoBoundingBox bbox = {{-0.9, -0.9, -0.9}, {0.9, 0.9, 0.9}};
 
+		double t1 = glfwGetTime();
+		CameraMove(&camera, t1 - t);
+		t = t1;
+
 		mat4x4 v;
+		mat4x4_identity(v);
 		// View
-		vec3 eye = {0.3f, 0.0f, 4.0f};
-		vec3 center = {0.0f, 0.0f, 0.0f};
-		vec3 up = {0.0f, 1.0f, 0.0f};
-		mat4x4_look_at(v, eye, center, up);
+		mat4x4_rotate_X(v, v, camera.rotation[0]);
+		mat4x4_rotate_Y(v, v, camera.rotation[1]);
+		mat4x4_translate_in_place(v,
+			camera.position[0],
+			camera.position[1],
+			camera.position[2]);
 
 		// Projection
 		mat4x4 p;
