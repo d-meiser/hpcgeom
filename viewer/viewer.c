@@ -10,6 +10,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+
+#ifndef NDEBUG
 static GLint check_err()
 {
 	GLint err = glGetError();
@@ -18,6 +20,7 @@ static GLint check_err()
 	}
 	return err;
 }
+#endif
 
 #define GL_SAFE_CALL(f) do {\
 	f;\
