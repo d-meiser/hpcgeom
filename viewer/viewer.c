@@ -10,20 +10,29 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+static GLint check_err()
+{
+	GLint err = glGetError();
+	if (err != GL_NO_ERROR) {
+		printf("err == %d\n", err);
+	}
+	return err;
+}
 
 #define GL_SAFE_CALL(f) do {\
 	f;\
-	assert(GL_NO_ERROR == glGetError());\
+	assert(GL_NO_ERROR == check_err());\
 } while(0);
 
 #define GL_CHECK do {\
-	assert(GL_NO_ERROR == glGetError());\
+	assert(GL_NO_ERROR == check_err());\
 } while(0);
 
 
 static const char* vertex_shader_text =
+"#version 150\n"
 "uniform mat4 mvp;\n"
-"attribute vec3 vpos;\n"
+"in vec3 vpos;\n"
 "void main()\n"
 "{\n"
 "    gl_Position = mvp * vec4(vpos, 1.0);\n"
@@ -38,6 +47,7 @@ static const char* fragment_shader_text =
 
 struct BBoxCtx {
 	GLuint vbo;
+	GLuint vao;
 	GLuint shader_program;
 	GLint mvp_loc;
 	GLint col_loc;
@@ -92,6 +102,9 @@ struct BBoxCtx BBoxCtxCreate(GLuint shader_program)
 //			}
 //		}
 //	}
+//
+	GL_SAFE_CALL(glGenVertexArrays(1, &ctx.vao));
+	GL_SAFE_CALL(glBindVertexArray(ctx.vao));
 
 	GL_SAFE_CALL(glGenBuffers(1, &ctx.vbo));
 	GL_SAFE_CALL(glBindBuffer(GL_ARRAY_BUFFER, ctx.vbo));
@@ -107,11 +120,16 @@ struct BBoxCtx BBoxCtxCreate(GLuint shader_program)
 	ctx.vpos_loc = glGetAttribLocation(ctx.shader_program, "vpos");
 	GL_CHECK
 
+	GL_SAFE_CALL(glEnableVertexAttribArray(ctx.vpos_loc));
+	GL_SAFE_CALL(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE,
+		3 * sizeof(float), 0));
+
 	return ctx;
 }
 
 void BBoxCtxDestroy(struct BBoxCtx *ctx)
 {
+	GL_SAFE_CALL(glDeleteVertexArrays(1, &ctx->vao));
 	GL_SAFE_CALL(glDeleteBuffers(1, &ctx->vbo));
 }
 
@@ -142,13 +160,9 @@ void BBoxDraw(
 		(const GLfloat*)mvp));
 	GL_SAFE_CALL(glUniform4f(ctx->col_loc, 0.0f, 1.0f, 0.0f, 1.0f));
 
-	GL_SAFE_CALL(glBindBuffer(GL_ARRAY_BUFFER, ctx->vbo));
-	GL_SAFE_CALL(glEnableVertexAttribArray(ctx->vpos_loc));
-	GL_SAFE_CALL(glVertexAttribPointer(ctx->vpos_loc, 3, GL_FLOAT, GL_FALSE,
-		sizeof(float) * 3, (void*)0));
+	GL_SAFE_CALL(glBindVertexArray(ctx->vao));
 
 	GL_SAFE_CALL(glDrawArrays(GL_LINES, 0, 24));
-	//GL_SAFE_CALL(glDrawArrays(GL_LINE_STRIP, 0, 8));
 }
 
 GLuint create_program()
@@ -211,8 +225,10 @@ int main(void)
 	if (!glfwInit())
 		exit(EXIT_FAILURE);
 
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
+	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_SAMPLES, 8);
 
 	window = glfwCreateWindow(640, 480, "Viewer", NULL, NULL);
@@ -231,8 +247,6 @@ int main(void)
 
 	GL_SAFE_CALL(glEnable(GL_LINE_SMOOTH));
 	GL_SAFE_CALL(glHint(GL_LINE_SMOOTH_HINT, GL_NICEST));
-	GL_SAFE_CALL(glEnable(GL_POINT_SMOOTH));
-	GL_SAFE_CALL(glHint(GL_POINT_SMOOTH_HINT, GL_NICEST));
 	GL_SAFE_CALL(glEnable(GL_BLEND));
 	GL_SAFE_CALL(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 
